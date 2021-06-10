@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Union, Sequence, Optional
 from .matrices import Matrix, MatrixPointer
 from .constants import EditOperation as EdOp
@@ -52,23 +53,35 @@ class Levenshtein:
         """Advances matrix pointer to next cell."""
         return self.ptr.advance()
 
+    def matrix_assign(self, dvalue: int, pvalue: MatrixPointer, evalue: EdOp) -> None:
+        """Make parallel assignment at current position in distance, pointer, and edit matrices."""
+        self.dmatrix[self.ptr] = dvalue
+        self.pmatrix[self.ptr] = pvalue
+        self.ematrix[self.ptr] = evalue
+
     def calculate(self) -> None:
         """Calculate value of current cell."""
         # Special cases
         if self.ptr == (0, 0):
-            self.dmatrix[self.ptr] = 0
-            self.pmatrix[self.ptr] = self.ptr.copy()
-            self.ematrix[self.ptr] = EdOp.NONE
+            self.matrix_assign(
+                0,
+                self.ptr.copy(),
+                EdOp.NONE
+            )
             return
         if self.ptr.r == 0:
-            self.dmatrix[self.ptr] = self.dmatrix[self.ptr.cleft()] + self.delete_cost
-            self.pmatrix[self.ptr] = self.ptr.cleft()
-            self.ematrix[self.ptr] = EdOp.DELETE
+            self.matrix_assign(
+                self.dmatrix[self.ptr.cleft()] + self.insert_cost,
+                self.ptr.cleft(),
+                EdOp.INSERT
+            )
             return
         if self.ptr.c == 0:
-            self.dmatrix[self.ptr] = self.dmatrix[self.ptr.cup()] + self.insert_cost
-            self.pmatrix[self.ptr] = self.ptr.cup()
-            self.ematrix[self.ptr] = EdOp.INSERT
+            self.matrix_assign(
+                self.dmatrix[self.ptr.cup()] + self.delete_cost,
+                self.ptr.cup(),
+                EdOp.DELETE
+            )
             return
         # Get values for surrounding three cells
         vup = self.dmatrix[self.ptr.cup()]
@@ -82,23 +95,29 @@ class Levenshtein:
             substitute_cost = self.substitute_cost
             substitute_edop = EdOp.SUBSTITUTE
         # Add cheapest path + operation cost to current cell
-        deletion = self.dmatrix[self.ptr.cleft()] + self.delete_cost
-        insertion = self.dmatrix[self.ptr.cup()] + self.insert_cost
+        insertion = self.dmatrix[self.ptr.cleft()] + self.insert_cost
+        deletion = self.dmatrix[self.ptr.cup()] + self.delete_cost
         substitution = self.dmatrix[self.ptr.cupleft()] + substitute_cost
-        if deletion < insertion and deletion < substitution:
-            self.dmatrix[self.ptr] = deletion
-            self.pmatrix[self.ptr] = self.ptr.cleft()
-            self.ematrix[self.ptr] = EdOp.DELETE
-            return
         if insertion < deletion and insertion < substitution:
-            self.dmatrix[self.ptr] = insertion
-            self.pmatrix[self.ptr] = self.ptr.cup()
-            self.ematrix[self.ptr] = EdOp.INSERT
+            self.matrix_assign(
+                insertion,
+                self.ptr.cleft(),
+                EdOp.INSERT
+            )
             return
-        if substitution <= deletion and substitution <= insertion:
-            self.dmatrix[self.ptr] = substitution
-            self.pmatrix[self.ptr] = self.ptr.cupleft()
-            self.ematrix[self.ptr] = substitute_edop
+        if deletion < insertion and deletion < substitution:
+            self.matrix_assign(
+                deletion,
+                self.ptr.cup(),
+                EdOp.DELETE
+            )
+            return
+        if substitution <= insertion and substitution <= deletion:
+            self.matrix_assign(
+                substitution,
+                self.ptr.cupleft(),
+                substitute_edop
+            )
             return
         raise Exception("You've found a bug in the calculation algorithm. We should never ever have got here...")
 
