@@ -27,3 +27,22 @@ class Direction(Flag):
     SOUTHEAST = SOUTH | EAST
     SOUTHWEST = SOUTH | WEST
     NORTHWEST = NORTH | WEST
+
+    def symbol(self) -> str:
+        """Returns a symbolic representation in the form of a pointing arrow."""
+        if self & NORTHEAST:
+            return '↗'
+        if self & SOUTHEAST:
+            return '↘'
+        if self & SOUTHWEST:
+            return '↙'
+        if self & NORTHWEST:
+            return '↖'
+        if self & NORTH:
+            return '↑'
+        if self & EAST:
+            return '→'
+        if self & SOUTH:
+            return '↓'
+        if self & WEST:
+            return '←'
