@@ -46,3 +46,5 @@ class Direction(Flag):
             return '↓'
         if self == Direction.WEST:
             return '←'
+        if self == Direction.NONE:
+            return '○'
