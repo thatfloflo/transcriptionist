@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Union, Sequence, Optional
 from .matrices import Matrix, MatrixPointer
-from .constants import EditOperation as EdOp
+from .constants import Direction, EditOperation as EdOp
 
 Numeric = Union[int, float]
 
@@ -169,6 +169,74 @@ class Levenshtein:
             return self.dmatrix[self.dmatrix.n_rows - 1, self.dmatrix.n_cols - 1]
         return None
 
+    @property
+    def esequence(self) -> Optional[list[OpEd]]:
+        if self.computed:
+            end = MatrixPointer(self.dmatrix, self.dmatrix.n_rows - 1, self.dmatrix.n_cols - 1)
+            start = MatrixPointer(self.dmatrix, 0, 0)
+            cur = end
+            edits = []
+            while True:
+                edits.insert(0, self.ematrix[cur])
+                cur = self.pmatrix[cur]
+                if cur == start:
+                    break
+            return edits
+        return None
+
+    @property
+    def dsequence(self) -> Optional[list[Numeric]]:
+        if self.computed:
+            end = MatrixPointer(self.dmatrix, self.dmatrix.n_rows - 1, self.dmatrix.n_cols - 1)
+            start = MatrixPointer(self.dmatrix, 0, 0)
+            cur = end
+            costs = []
+            while True:
+                costs.insert(0, self.dmatrix[cur])
+                cur = self.pmatrix[cur]
+                if cur == start:
+                    break
+            return costs
+        return
+
+    @property
+    def psequence(self) -> Optional[list[MatrixPointer]]:
+        if self.computed:
+            end = MatrixPointer(self.dmatrix, self.dmatrix.n_rows - 1, self.dmatrix.n_cols - 1)
+            start = MatrixPointer(self.dmatrix, 0, 0)
+            cur = end
+            pointers = []
+            while True:
+                pointers.insert(0, self.pmatrix[cur].copy())
+                cur = self.pmatrix[cur]
+                if cur == start:
+                    break
+            return pointers
+        return None
+
+    @property
+    def dirsequence(self) -> Optional[list[Direction]]:
+        if self.computed:
+            end = MatrixPointer(self.dmatrix, self.dmatrix.n_rows - 1, self.dmatrix.n_cols - 1)
+            start = MatrixPointer(self.dmatrix, 0, 0)
+            cur = end
+            pointers = []
+            while True:
+                pointers.insert(0, cur.directionto(self.pmatrix[cur]))
+                cur = self.pmatrix[cur]
+                if cur == start:
+                    break
+            return pointers
+        return None
+
+    @property
+    def dirmatrix(self) -> Matrix:
+        dirmatrix = self.pmatrix.copy()
+        dirptr = MatrixPointer(dirmatrix, 0, 0)
+        dirmatrix[0, 0] = Direction.NONE # By definition
+        while dirptr.advance():
+            dirmatrix[dirptr] = dirptr.directionto(dirmatrix[dirptr])
+        return dirmatrix
 
 def levdist(
     source: Sequence,
