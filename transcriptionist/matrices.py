@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Any, Sequence, Union, Optional
 from multimethod import multimethod
+from .constants import Direction
 
 Coordinate = Union[
     tuple[Optional[int], int],
@@ -652,3 +653,18 @@ class MatrixPointer:
         if c.mdownright():
             return c
         return False
+
+    def directionto(self, other: MatrixPointer) -> Direction:
+        dir = Direction.NONE
+        if other.c < self.c:
+            dir |= Direction.WEST
+        elif other.c > self.c:
+            dir |= Direction.EAST
+        if other.r < self.r:
+            dir |= Direction.NORTH
+        elif other.r > self.r:
+            dir |= Direction.SOUTH
+        return dir
+
+    def directionfrom(self, other: MatrixPointer) -> Direction:
+        return other.directionto(self)

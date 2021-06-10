@@ -15,3 +15,15 @@ class EditOperation(Flag):
             if self & member:
                 buf += name[0]
         return buf
+
+class Direction(Flag):
+    """Flaggable enumeration of directions, eg. to move in a matrix."""
+    NONE = 0
+    NORTH = auto()
+    EAST = auto()
+    SOUTH = auto()
+    WEST = auto()
+    NORTHEAST = NORTH | EAST
+    SOUTHEAST = SOUTH | EAST
+    SOUTHWEST = SOUTH | WEST
+    NORTHWEST = NORTH | WEST
