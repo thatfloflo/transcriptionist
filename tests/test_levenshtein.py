@@ -1,6 +1,7 @@
 import unittest
 import random
 from transcriptionist.levenshtein import Levenshtein, levdist
+from transcriptionist.constants import EditOperation, Direction
 
 class TestLevenshtein(unittest.TestCase):
 
@@ -14,10 +15,19 @@ class TestLevenshtein(unittest.TestCase):
             ("abcdefg", "abcdefg"): 0,  # equal
             ("abcdefg", ""):        7,  # delete/insert a, b, c, d, e, f, g
             ("abc", "xyz"):         3,  # subsititue a->x, b->y, c->z
+            ("ABxC", "ABC"):        1,
+            ("abc", "abXc"):        1,
         }
         for (str1, str2), dist in unweighted.items():
             ld = Levenshtein(str1, str2)
             ld.compute()
+            print(f"Comparing: '{str1}', '{str2}':")
+            print(f"Edit distance: {dist}")
+            #print(list(map(EditOperation.code, ld.esequence)))
+            #print(ld.dirmatrix.map(Direction.symbol))
+            #print(list(map(Direction.symbol, ld.dirsequence)))
+            print(ld.visualise())
+            print("-"*80)
             self.assertEqual(ld.distance, dist, msg=f"ld(\"{str1}\", \"{str2}\") should equal {dist}, but is {ld.distance}")
 
 

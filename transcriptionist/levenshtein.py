@@ -170,7 +170,7 @@ class Levenshtein:
         return None
 
     @property
-    def esequence(self) -> Optional[list[OpEd]]:
+    def esequence(self) -> Optional[list[EdOp]]:
         if self.computed:
             end = MatrixPointer(self.dmatrix, self.dmatrix.n_rows - 1, self.dmatrix.n_cols - 1)
             start = MatrixPointer(self.dmatrix, 0, 0)
@@ -237,6 +237,94 @@ class Levenshtein:
         while dirptr.advance():
             dirmatrix[dirptr] = dirptr.directionto(dirmatrix[dirptr])
         return dirmatrix
+
+    def visualise(self) -> str:
+        """Returns a text-based visualisation of the edit distance and its derivation."""
+        # TODO: Handle case where matrix not computed yet?
+        source = list(map(str, self.source))
+        target = list(map(str, self.target))
+        costs = self.esequence
+        edits = list(map(EdOp.code, self.esequence))
+        for i in range(0, len(costs)):
+            if costs[i] == EdOp.INSERT:
+                costs[i] = str(self.insert_cost)
+            elif costs[i] == EdOp.DELETE:
+                costs[i] = str(self.delete_cost)
+            elif costs[i] == EdOp.SUBSTITUTE:
+                costs[i] = str(self.substitute_cost)
+            else: # == EdOp.NONE
+                costs[i] = '0'
+        width: int = 1
+        for sequence in (source, target, costs): # Edits are always width 1
+            for item in sequence:
+                if len(item) > width:
+                    width = len(item)
+        width += 2 # Padding
+        buf: str = ''
+        length = max(
+            len(source),
+            len(target),
+            len(costs),
+            len(edits)
+        )
+        # Divider lines
+        divider: str = ''
+        divider += "+--------" # For labels
+        for i in range(0, length):
+            divider += "+"
+            divider += "-" * width
+        divider += "+\n"
+        buf += divider
+        # Source
+        buf += "| Source "
+        for i in range(0, length):
+            buf += "|"
+            if i < len(edits):
+                if edits[i] == 'I':
+                    source.insert(i, '')
+            if i < len(source):
+                buf += source[i].center(width)
+            else:
+                buf += " " * width
+        buf += "|\n"
+        buf += divider
+        # Target
+        buf += "| Target "
+        for i in range(0, length):
+            buf += "|"
+            if i < len(edits):
+                if edits[i] == 'D':
+                    target.insert(i, '')
+            if i < len(target):
+                buf += target[i].center(width)
+            else:
+                buf += " " * width
+        buf += "|\n"
+        buf += divider
+        # Edits
+        buf += "| Edits  "
+        for i in range(0, length):
+            buf += "|"
+            if i < len(edits):
+                buf += edits[i].center(width)
+            else:
+                buf += " " * width
+        buf += "|\n"
+        buf += divider
+        # Costs
+        buf += "| Costs  "
+        for i in range(0, length):
+            buf += "|"
+            if i < len(costs):
+                buf += costs[i].center(width)
+            else:
+                buf += " " * width
+        buf += "|\n"
+        buf += divider
+
+        return buf
+
+
 
 def levdist(
     source: Sequence,
