@@ -11,6 +11,7 @@ Coordinate = Union[
 ]
 
 class Matrix:
+    """Simple implementation of two-dimensional matrices of fixed dimensions."""
 
     default_value: Any
     __cells: dict[tuple[int, int], Any]
@@ -51,6 +52,18 @@ class Matrix:
         self.row_labels = row_labels
         self.col_labels = col_labels
         self.cell_width = cell_width
+
+    def copy(self) -> Matrix:
+        """Returns a shallow copy of itself."""
+        m = Matrix(self.n_rows, self.n_cols, self.default_value, self.row_labels, self.col_labels, self.cell_width)
+        for r in range(0, self.n_rows):
+            for c in range(0, self.n_cols):
+                m[r, c] = self[r, c]
+        return m
+
+    def __copy__(self) -> Matrix:
+        """Returns a shallow copy of itself."""
+        return self.copy()
 
     @property
     def n_rows(self) -> int:
@@ -316,7 +329,6 @@ class Matrix:
         buf += " ]"
         return buf
 
-
     def __str__(self):
         """Returns an informative string representation of the matrix using object's default labels and cell width."""
         return self.stringify(
@@ -338,6 +350,20 @@ class Matrix:
                     buf += ", "
                 buf += repr(self[r, c]).ljust(self.cell_width)
         return buf + "]]"
+
+    def mutate(self, func: callable) -> None:
+        """Apply function 'func' to every cell in the matrix."""
+        for r in range(0, self.n_rows):
+            for c in range(0, self.n_cols):
+                self[r, c] = func(self[r, c])
+
+    def map(self, func: callable) -> Matrix:
+        """Return a new matrix with 'func' applied to every cell."""
+        m = Matrix(self.n_rows, self.n_cols, self.default_value, self.row_labels, self.col_labels, self.cell_width)
+        for r in range(0, self.n_rows):
+            for c in range(0, self.n_cols):
+                m[r, c] = func(self[r, c])
+        return m
 
 
 class MatrixPointer:
@@ -444,9 +470,11 @@ class MatrixPointer:
         return 2
 
     def copy(self) -> MatrixPointer:
+        """Returns a shallow copy of itself."""
         return MatrixPointer(self.m, self.r, self.c)
 
     def __copy__(self) -> MatrixPointer:
+        """Returns a shallow copy of itself."""
         return self.copy()
 
     def mleft(self):
