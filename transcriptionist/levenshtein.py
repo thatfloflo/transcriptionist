@@ -248,8 +248,10 @@ class Levenshtein:
         for i in range(0, len(costs)):
             if costs[i] == EdOp.INSERT:
                 costs[i] = str(self.insert_cost)
+                source.insert(i, '')
             elif costs[i] == EdOp.DELETE:
                 costs[i] = str(self.delete_cost)
+                target.insert(i, '')
             elif costs[i] == EdOp.SUBSTITUTE:
                 costs[i] = str(self.substitute_cost)
             else: # == EdOp.NONE
@@ -267,63 +269,19 @@ class Levenshtein:
             len(costs),
             len(edits)
         )
-        # Divider lines
-        divider: str = ''
-        divider += "+--------" # For labels
-        for i in range(0, length):
-            divider += "+"
-            divider += "-" * width
-        divider += "+\n"
+        def row(header: str, cells: Sequence, length: int = length, width: int = width) -> str:
+            return "|" + header.ljust(8) + ''.join(["|" + cells[i].center(width) for i in range(0, len(cells))]) + "|\n"
+        divider = "+--------" + ''.join(["+" + "-" * width for i in range(0, length)]) + "+\n"
         buf += divider
-        # Source
-        buf += "| Source "
-        for i in range(0, length):
-            buf += "|"
-            if i < len(edits):
-                if edits[i] == 'I':
-                    source.insert(i, '')
-            if i < len(source):
-                buf += source[i].center(width)
-            else:
-                buf += " " * width
-        buf += "|\n"
+        buf += row("Source", source)
         buf += divider
-        # Target
-        buf += "| Target "
-        for i in range(0, length):
-            buf += "|"
-            if i < len(edits):
-                if edits[i] == 'D':
-                    target.insert(i, '')
-            if i < len(target):
-                buf += target[i].center(width)
-            else:
-                buf += " " * width
-        buf += "|\n"
+        buf += row("Target", target)
         buf += divider
-        # Edits
-        buf += "| Edits  "
-        for i in range(0, length):
-            buf += "|"
-            if i < len(edits):
-                buf += edits[i].center(width)
-            else:
-                buf += " " * width
-        buf += "|\n"
+        buf += row("Edits", edits)
         buf += divider
-        # Costs
-        buf += "| Costs  "
-        for i in range(0, length):
-            buf += "|"
-            if i < len(costs):
-                buf += costs[i].center(width)
-            else:
-                buf += " " * width
-        buf += "|\n"
+        buf += row("Costs", costs)
         buf += divider
-
         return buf
-
 
 
 def levdist(
