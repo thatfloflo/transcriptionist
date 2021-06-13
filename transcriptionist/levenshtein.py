@@ -243,6 +243,10 @@ class Levenshtein:
         # TODO: Handle case where matrix not computed yet?
         source = list(map(str, self.source))
         target = list(map(str, self.target))
+        if len(source) == 0:
+            source = ['']
+        if len(target) == 0:
+            target = ['']
         costs = self.esequence
         edits = list(map(EdOp.code, self.esequence))
         for i in range(0, len(costs)):
