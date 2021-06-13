@@ -239,8 +239,11 @@ class Levenshtein:
         return dirmatrix
 
     def visualise(self) -> str:
-        """Returns a text-based visualisation of the edit distance and its derivation."""
-        # TODO: Handle case where matrix not computed yet?
+        """Returns a text-based visualisation of the edit distance and its derivation.
+
+        If the matrix has not been fully computed yet, it will be computed by the method."""
+        if not self.computed:
+            self.compute()
         source = list(map(str, self.source))
         target = list(map(str, self.target))
         if len(source) == 0:
