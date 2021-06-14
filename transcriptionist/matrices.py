@@ -1,3 +1,7 @@
+"""Mutable matrix objects for matrix based computations.
+
+This submodule provides an object-oriented implementation of two-dimensional matrices.
+"""
 from __future__ import annotations
 from typing import Any, Sequence, Union, Optional
 from multimethod import multimethod
@@ -10,9 +14,19 @@ Coordinate = Union[
     list[int, Optional[int]],
     'MatrixPointer'
 ]
+"""Compound type hint for methods that accept complex inputs for a coordinate in the form
+of either a Matrix pointer, or a 2 member tuple or list where at least one value is an
+integer and the other either None or an integer."""
 
 class Matrix:
-    """Simple implementation of two-dimensional matrices of fixed dimensions."""
+    """Simple implementation of two-dimensional matrices of specified dimensions.
+
+    Attributes:
+        default_value: The value to be inserted into new/empty cells. Also used as the
+            basis for boolean conversion of a `Matrix`: if all the cells are identical to
+            `default_value` then the `Matrix` evaluates to False; if any cells have
+            a value not identical to `default_value` then the `Matrix` evaluates to True.
+    """
 
     default_value: Any
     __cells: dict[tuple[int, int], Any]
@@ -33,10 +47,20 @@ class Matrix:
     ):
         """Creates a new matrix of specified dimensions.
 
-        Creates a new matrix with dimensions as specified by 'rows' and 'cols' and
-        initialises all cells with 'default_value'. The row and column labels and
+        Creates a new matrix with dimensions as specified by `rows` and `cols` and
+        initialises all cells with `default_value`. The row and column labels and
         specified cell width are only used when the matrix is converted to a string,
-        e.g. for printing."""
+        e.g. for printing.
+
+        Args:
+            rows: The number of rows the matrix should have.
+            cols: The number of columns the matrix should have.
+            default_value: The default value with which new cells should be initialised.
+            row_labels: An optional sequence of length `rows` to be used as row labels.
+            col_labels: An optional sequence of length `cols` to be used as column labels.
+            cell_wdith: The cell width to be used for alignment when the matrix is
+                represented as a string.
+        """
         if not isinstance(rows, int):
             raise TypeError("Argument `rows` must be of type int.")
         if not isinstance(cols, int):
@@ -55,7 +79,33 @@ class Matrix:
         self.cell_width = cell_width
 
     def copy(self) -> Matrix:
-        """Returns a shallow copy of itself."""
+        """Makes a shallow copy of itself.
+
+        Returns:
+            A new `Matrix` object with all the properties and cell values recursively
+            assigned to the new object. Because this is shallow and the individual cell
+            values are simply assigned to the new cell, it's important to note that where
+            cell values reference specific objects (e.g. a `MatrixPointer`), changes to
+            these in the new copy may also affect those in the original copy. If it is
+            necessary to also carry out some operation on the cell values before copying
+            them then `map` is a better choice. For example, to create a deep copy of
+            a `Matrix` itself containing numeric matrices:
+                >>> m = Matrix(1, 1, Matrix(1, 1, 0))
+                [[[[0]]]]
+                >>> shallow = m.copy()
+                >>> shallow[0, 0][0, 0] = 1 # Affects the inner matrix in both m and shallow
+                >>> shallow
+                [[[[1]]]]
+                >>> m
+                [[[[1]]]]
+                >>> deep = m.map(Matrix.copy)
+                >>> deep[0, 0][0, 0] = 2 # Won't affect inner matrix of m/shallow
+                >>> deep
+                [[[[2]]]]
+                >>> m
+                [[[[1]]]]
+
+            """
         m = Matrix(self.n_rows, self.n_cols, self.default_value, self.row_labels, self.col_labels, self.cell_width)
         for r in range(0, self.n_rows):
             for c in range(0, self.n_cols):
@@ -63,56 +113,70 @@ class Matrix:
         return m
 
     def __copy__(self) -> Matrix:
-        """Returns a shallow copy of itself."""
+        """Makes a shallow copy of itself, cf. `Matrix.copy` method."""
         return self.copy()
 
     @property
     def n_rows(self) -> int:
-        """Returns the number of rows in the matrix."""
+        """The number of rows in the matrix (read-only)."""
         return self.__n_rows
 
     @property
     def n_cols(self) -> int:
-        """Returns the number of columns in the matrix."""
+        """The number of columns in the matrix (read-only)."""
         return self.__n_cols
 
     @property
     def n_dim(self) -> tuple[int, int]:
-        """Returns a tuple of the dimensions of the matrix in the form (rows, cols)."""
+        """A tuple of the dimensions of the matrix in the form `(rows, cols)` (read-only)."""
         return (self.n_rows, self.n_cols)
 
     @property
     def size(self) -> int:
-        """Returns the total number of cells in the matrix."""
+        """The total number of cells in the matrix."""
         return self.n_rows * self.n_cols
 
     @property
     def row_labels(self) -> Optional[Sequence]:
-        """Returns the labels used for the columns."""
+        """The labels used for the rows.
+
+        Can be reassigned, but assigned values are checked to be either None or
+        a Sequence and they must match the number of rows in their length property.
+
+        Raises:
+            TypeError: Raised if assigned row labels are neither None nor a Sequence type.
+            ValueError: Raised if the length of an assigned value does not match `n_rows`.
+        """
         return self.__row_labels
 
     @row_labels.setter
     def row_labels(self, row_labels: Optional[Sequence]):
-        """Sets the row labels."""
         if row_labels is None:
             self.__row_labels = None
             return
         try:
             length = len(row_labels)
         except TypeError:
-            raise TypeError("Row labels must be a either None or a sequence type with a length, object of type '{type(row_labels}' has no len().")
+            raise TypeError("Row labels must be a either None or a Sequence type with a length, object of type '{type(row_labels}' has no len().")
         if length is not self.n_rows:
             raise ValueError(f"Row labels must be the same length as number of rows in the matrix. Length of labels: {length}, number of rows: {self.n_rows}")
         self.__row_labels = row_labels
 
     @property
     def col_labels(self) -> Optional[Sequence]:
-        """Returns the labels used for the y-axis (rows)."""
+        """The labels used for the columns.
+
+        Can be reassigned, but assigned values are checked to be either None or
+        a Sequence and they must match the number of columns in their length property.
+
+        Raises:
+            TypeError: Raised if assigned row labels are neither None nor a Sequence type.
+            ValueError: Raised if the length of an assigned value does not match `n_cols`.
+        """
         return self.__col_labels
 
     @col_labels.setter
     def col_labels(self, col_labels: Optional[Sequence]):
-        """Sets the column labels."""
         if col_labels is None:
             self.__col_labels = None
             return
@@ -126,20 +190,23 @@ class Matrix:
 
     @property
     def cell_width(self) -> int:
-        """Returns the cell width used for str()/repr() alignment."""
+        """The cell width (>=0) to be used for str()/repr() alignment.
+
+        Raises:
+            ValueError: Raised if cell width is assigned a value below 0.
+        """
         return self.__cell_width
 
     @cell_width.setter
     def cell_width(self, cell_width: int = 0):
-        """Sets the cell width used for str()/repr() alignment."""
         cell_width = int(cell_width)
         if cell_width < 0:
-            raise ValueError(f"Cell width must be greater than 0, {cell_width} specified.")
+            raise ValueError(f"Cell width must be greater or equal to 0, {cell_width} specified.")
         self.__cell_width = cell_width
 
     @property
     def cols(self) -> list:
-        """Returns a list of columns, each of which is a list containing row values."""
+        """Provides list access to the matrix's columns, each of which is a list containing row values."""
         buf = []
         for c in range(0, self.n_cols):
             buf.append(self.getcol(c))
@@ -147,7 +214,7 @@ class Matrix:
 
     @property
     def rows(self) -> list:
-        """Returns a list of rows, each of which is a list containing column values."""
+        """Provides list access to the matrix's rows, each of which is a list containing column values."""
         buf = []
         for r in range(0, self.n_rows):
             buf.append(self.getrow(r))
@@ -166,18 +233,40 @@ class Matrix:
         return col
 
     def __validate_row_index(self, row: int):
-        """Checks if given row index is in range, raises IndexError if not."""
+        """Checks if given row index is in range, raises IndexError if not.
+
+        Raises:
+            IndexError: Raised if `row` is not inbetween 0 and the number of rows in the matrix.
+        """
         if row not in range(0, self.n_rows):
             raise IndexError(f"Trying to access row {row} of matrix with {self.n_rows} rows.")
 
     def __validate_col_index(self, col: int):
-        """Checks if given column index is in range, raises IndexError if not."""
+        """Checks if given column index is in range, raises IndexError if not.
+
+        Raises:
+            IndexError: Raised if `col` is not inbetween 0 and the number of columns in the matrix.
+        """
         if col not in range(0, self.n_cols):
             raise IndexError(f"Trying to access column {col} of matrix with {self.n_cols} columns.")
 
     @multimethod
     def getitem(self, row: int, col: int = None) -> Any:
-        """Return item at coordinates (row, col)."""
+        """Gets the item at the coordinates `row` and `col`.
+
+        Returns the item stored in the matrix cell indicated by the coordinates `row`
+        and `col`. If only a `row` value is provided, the entire row at that index is
+        returned as a list of its column values (cf. `getrow`).
+
+        Args:
+            row: Index of a row in the matrix.
+            col: Intex of a column in the matrix. If not supplied or None is given the
+                call will be treated like `getrow(row)`.
+
+        Raises:
+            IndexError: Raised if `row` or `col` are out of the range of the matrix's
+                dimensions.
+        """
         row = self.__wrap_row(row)
         self.__validate_row_index(row)
         col = self.__wrap_col(col)
@@ -186,11 +275,32 @@ class Matrix:
 
     @multimethod
     def getitem(self, ptr: MatrixPointer) -> Any:
+        """Gets the item at the coordinates identified by the `MatrixPointer`.
+
+        Args:
+            ptr: A `MatrixPointer` pointing to a cell in the matrix.
+
+        Raises:
+            IndexError: Raised if the coordinates of the supplied `MatrixPointer` are out
+                of the range of the matrix's dimensions.
+        """
         return self.getitem(ptr.r, ptr.c)
 
     @multimethod
-    def setitem(self, row: int, col: int, value: Any):
-        """Set item at coordinates to value."""
+    def setitem(self, row: int, col: int, value: Any) -> None:
+        """Sets the item at the coordinates `row` and `col` to `value`.
+
+        Sets the item stored in the matrix cell indicated by the coordinates `row`
+        and `col` to `value`.
+
+        Args:
+            row: Index of a row in the matrix.
+            col: Intex of a column in the matrix.
+
+        Raises:
+            IndexError: Raised if `row` or `col` are out of the range of the matrix's
+                dimensions.
+        """
         row = self.__wrap_row(row)
         self.__validate_row_index(row)
         col = self.__wrap_col(col)
@@ -198,11 +308,28 @@ class Matrix:
         self.__cells[(row, col)] = value
 
     @multimethod
-    def setitem(self, ptr: MatrixPointer, value: Any):
+    def setitem(self, ptr: MatrixPointer, value: Any) -> None:
+        """Sets the item at the coordinates identified by the `MatrixPointer` to `value`.
+
+        Args:
+            ptr: A `MatrixPointer` pointing to a cell in the matrix.
+
+        Raises:
+            IndexError: Raised if the coordinates of the supplied `MatrixPointer` are out
+                of the range of the matrix's dimensions.
+        """
         self.setitem(ptr.r, ptr.c, value)
 
     def getrow(self, row: int) -> list:
-        """Get row at specified index and return as list."""
+        """Gets row at specified index and returns a list of column values.
+
+        Args:
+            row: Index of the row to be returned.
+
+        Raises:
+            IndexError: Raised if the specified row index is out of the range of the
+                matrix's rows.
+        """
         row = self.__wrap_row(row)
         self.__validate_row_index(row)
         buf = []
@@ -211,7 +338,19 @@ class Matrix:
         return buf
 
     def setrow(self, row: int, values: Sequence):
-        """Set row at specified index to be equal to a sequence of values."""
+        """Sets the column values of a specified row to the items of a given sequence.
+
+        Args:
+            row: Index of the row to be overwritten.
+            values: A Sequence of an equal length to the matrix's columns containing the
+                values to be assigned to each column in the specified row.
+
+        Raises:
+            IndexError: Raised if the specified row index is out of the range of the
+                matrix's rows.
+            ValueError: Raised if the length of the `values` sequence doesn't match the
+                number of columns in the matrix.
+        """
         row = self.__wrap_row(row)
         self.__validate_row_index(row)
         if len(values) != self.n_cols:
@@ -220,7 +359,15 @@ class Matrix:
             self[row, i] = values[i]
 
     def getcol(self, col: int) -> list:
-        """Get column at specified index and return as list."""
+        """Gets column at specified index and returns a list of row values.
+
+        Args:
+            col: Index of the column to be returned.
+
+        Raises:
+            IndexError: Raised if the specified row index is out of the range of the
+                matrix's columns.
+        """
         col = self.__wrap_col(col)
         self.__validate_col_index(col)
         buf = []
@@ -229,7 +376,19 @@ class Matrix:
         return buf
 
     def setcol(self, col: int, values: Sequence):
-        """Set column at specified index to be equal to a sequence of values."""
+        """Sets the row values of a specified column to the items of a given sequence.
+
+        Args:
+            col: Index of the column to be overwritten.
+            values: A Sequence of an equal length to the matrix's rows containing the
+                values to be assigned to each row in the specified column.
+
+        Raises:
+            IndexError: Raised if the specified row index is out of the range of the
+                matrix's columns.
+            ValueError: Raised if the length of the `values` sequence doesn't match the
+                number of rows in the matrix.
+        """
         col = self.__wrap_col(col)
         self.__validate_col_index(col)
         if len(values) != self.n_rows:
@@ -238,11 +397,20 @@ class Matrix:
             self[i, col] = values[i]
 
     def __getitem__(self, key: Coordinate) -> Any:
-        """Return item at coordinates (row, col).
+        """Gets item at coordinates `row` and `col`.
 
-        Call as m[row, col]. Row and col may be integers or None. m[row, None] will
-        return a list with the entire row, m[None, col] will return a list with the
-        entire column. m[None, None] will raise an IndexError.
+        Call as `m[row, col]`. Row and col may be integers or None. `m[row, None]` will
+        return a list with the entire row, `m[None, col]` will return a list with the
+        entire column. `m[None, None]` will raise an IndexError.
+
+        May also be called with a `MatrixPointer` instead of row and column indeces, e.g.
+        as `m[ptr]`, where `ptr` is a `MatrixPointer`.
+
+        Raises:
+            IndexError: Raised if either or both of the column or row indeces are out of
+                range of the matrix's dimensions, or if both indeces are specified as
+                `None`.
+            TypeError: Raised if the given key does not match the Coordinate type hint.
         """
         if isinstance(key, MatrixPointer):
             key = (key.r, key.c)
@@ -258,14 +426,25 @@ class Matrix:
                 return self.getcol(col)
             if row is None and col is None:
                 raise IndexError("At least one index value (row, col) must be supplied, (None, None) given.")
-        raise KeyError(f"Key must be either of type tuple[int, int] or list[int, int].")
+        raise TypeError(f"Key must be either of type tuple[int, int] or list[int, int].")
 
     def __setitem__(self, key: Coordinate, value: Union[Any, Sequence]):
-        """Set item at coordinates (row, col) to value.
+        """Sets item at coordinates `row` and `col` to value.
 
-        Call as m[row, col] = value. Row and col may be integers or None. m[row, None] = values
-        is equivalent to m.setrow(row, values), m[None, col] = values is equivalent to
-        m.setcol(col, values). m[None, None] = value will raise an IndexError."""
+        Call as `m[row, col] = value`. Row and col may be integers or `None`.
+        `m[row, None] = values` is equivalent to `m.setrow(row, values)`,
+        `m[None, col] = values` is equivalent to `m.setcol(col, values)`.
+        `m[None, None] = value` will raise an IndexError.
+
+        May also be called with a `MatrixPointer` instead of row and column indeces, e.g.
+        as `m[ptr] = value`, where `ptr` is a `MatrixPointer`.
+
+        Raises:
+            IndexError: Raised if either or both of the column or row indeces are out of
+                range of the matrix's dimensions, or if both indeces are specified as
+                `None`.
+            TypeError: Raised if the given key does not match the Coordinate type hint.
+        """
         if isinstance(key, MatrixPointer):
             key = (key.r, key.c)
         if isinstance(key, list):
@@ -280,11 +459,11 @@ class Matrix:
                 return self.setcol(col, value)
             if row is None and col is None:
                 raise IndexError("At least one index value (row, col) must be supplied, (None, None) given.")
-        raise KeyError(f"Key must be either of type tuple[int, int] or list[int, int].")
+        raise TypeError(f"Key must be either of type tuple[int, int] or list[int, int].")
 
 
     def __bool__(self) -> bool:
-        """Returns False if all the cells of the matrix are identical to the default_value, True otherwise."""
+        """Returns False if all the cells of the matrix are identical to `default_value`, True otherwise."""
         for r in range(0, self.n_rows):
             for c in range(0, self.n_cols):
                 if self.__cells[(r, c)] is not self.default_value:
@@ -296,13 +475,21 @@ class Matrix:
         row_labels: Optional[Sequence] = None,
         col_labels: Optional[Sequence] = None,
         cell_width: Optional[int] = 0
-    ):
+    ) -> str:
         """Returns an informative string representation of the matrix.
 
         The row_labels, col_labels parameters, if supplied, must match the dimensions of
         the matrix. cell_width is used to right-pad the cells for alignment purposes and
         ideally is the width of the widest string representation to be expected for any
-        cell in the matrix."""
+        cell in the matrix.
+
+        Args:
+            row_labels: An optional sequence of an equal length to the matrix's rows to
+                be used as row labels.
+            col_labels: An optional sequence of an equal length to the matrix's columns to
+                be used as column labels.
+            cell_width: Optional cell width to be used for vertical alignment of columns.
+        """
         buf = ""
         for r in range(0, self.n_rows):
             if r == 0 and col_labels is not None:
@@ -330,7 +517,7 @@ class Matrix:
         buf += " ]"
         return buf
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Returns an informative string representation of the matrix using object's default labels and cell width."""
         return self.stringify(
             row_labels=self.row_labels,
@@ -338,7 +525,7 @@ class Matrix:
             cell_width=self.cell_width
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Returns a parseable representation of the matrix as a list of lists."""
         buf = "["
         for r in range(0, self.n_rows):
@@ -352,14 +539,26 @@ class Matrix:
                 buf += repr(self[r, c]).ljust(self.cell_width)
         return buf + "]]"
 
-    def mutate(self, func: callable) -> None:
-        """Apply function 'func' to every cell in the matrix."""
+    def mutate(self, function: callable) -> None:
+        """Applies 'function' to every cell in the matrix (in situ mapping).
+
+        Args:
+            function: A callable to be applied to each cell in the matrix.
+        """
         for r in range(0, self.n_rows):
             for c in range(0, self.n_cols):
-                self[r, c] = func(self[r, c])
+                self[r, c] = function(self[r, c])
 
-    def map(self, func: callable) -> Matrix:
-        """Return a new matrix with 'func' applied to every cell."""
+    def map(self, function: callable) -> Matrix:
+        """Returns a copy of the matrix with 'function' applied to every cell.
+
+        Args:
+            function: A callable to be applied to each cell in the copied matrix.
+
+        Returns:
+            A shallow copy of itself with `function` applied to every cell of the new copy
+            of the matrix.
+        """
         m = Matrix(self.n_rows, self.n_cols, self.default_value, self.row_labels, self.col_labels, self.cell_width)
         for r in range(0, self.n_rows):
             for c in range(0, self.n_cols):
@@ -368,12 +567,31 @@ class Matrix:
 
 
 class MatrixPointer:
+    """Pointers pointing at a specific cell in a `Matrix`.
 
+    This class provides a convenient way of keeping track of pointers to specific cells in
+    a `Matrix` object, guarding against exceeding the associated matrix's row and column
+    range and providing a number of convenince functions to traverse the matrix.
+    """
     __r: int
     __c: int
     __m: Matrix
 
     def __init__(self, m: Matrix, r: int = 0, c: int = 0):
+        """Creates a new `MatrixPointer` associated with the `Matrix` `m`.
+
+        Args:
+            m: The `Matrix` to which the `MatrixPointer` shall be affiliated.
+            r: An optional row index the pointer should point to upon initialisation
+                (default = 0).
+            c: An optional column index the pointer should pont to upon initialisation
+                (default = 0).
+
+        Raises:
+            TypeError: Raised if the argument `m` is not a `Matrix`.
+            ValueError: Raised if `r` or `c` are out of the range of the matrix's
+                dimensions.
+        """
         if not isinstance(m, Matrix):
             raise TypeError(f"Argument 'm' must be of type 'Matrix', {type(m)} given.")
         self.__m = m
@@ -381,12 +599,15 @@ class MatrixPointer:
         self.c = c
 
     def advance(self) -> bool:
-        """Advance pointer one cell in the matrix.
+        """Advances pointer to the next cell in the matrix.
 
         Advances the pointer to the next column of the current row in the matrix. Skips
-        to next row if end of columns is reached. Returns True if pointer has been
-        advanced, False otherwise (thus, False means the last cell of the matrix has
-        been reached)."""
+        to next row if end of columns is reached.
+
+        Returns:
+            True if pointer has been advanced, False otherwise. A return value of False
+            means the last cell of the matrix has been reached, meaning the return value
+            of `advance` can be used to loop over a matrix in a while loop."""
         try:
             self.c += 1
             return True
@@ -400,10 +621,17 @@ class MatrixPointer:
 
     @property
     def m(self) -> Matrix:
+        """The `Matrix` object the pointer is affiliated with (read-only)."""
         return self.__m
 
     @property
     def r(self) -> int:
+        """The row index in the affiliated matrix which the pointer is pointing to.
+
+        Raises:
+            ValueError: Raised if attempting to assign a value which is out of range
+                of the affiliated matrix's dimensions.
+        """
         return self.__r
 
     @r.setter
@@ -414,6 +642,12 @@ class MatrixPointer:
 
     @property
     def c(self) -> int:
+        """The column index in the affiliated matrix which the pointer is pointing to.
+
+        Raises:
+            ValueError: Raised if attempting to assign a value which is out of range
+                of the affiliated matrix's dimensions.
+        """
         return self.__c
 
     @c.setter
@@ -423,6 +657,18 @@ class MatrixPointer:
         self.__c = int(c)
 
     def __getitem__(self, key: int) -> int:
+        """Provides list access to the matrix coordinates that pointer is pointing to.
+
+        References or assignments to `ptr[0]` are equivalent to `ptr.r`, and those to
+        `ptr[1]` are equivalent to `ptr.c`.
+
+        Args:
+            key: An integer ranging from 0 to 1.
+
+        Raises:
+            TypeError: Raised if the provided key is not an integer.
+            IndexError: Raised if the provided index is not in range [0, 1]
+        """
         if not isinstance(key, int):
             raise TypeError("Index on MatrixPointer is only defined for integers.")
         if key == 0:
@@ -444,13 +690,40 @@ class MatrixPointer:
             return
         raise IndexError("Index for MatrixPointer must be in range [0, 1]")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Provides a parseable list representation of the coordinates pointed to by the
+        pointer.
+
+        Returns:
+            A parseable string representation of the pointer.
+        """
         return f"[{self.r}, {self.c}]"
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Provides a human readable string representation of the coordinates pointed to
+        by the pointer.
+
+        Returns:
+            A string representation of the pointer.
+        """
         return f"[{self.r}, {self.c}]"
 
     def __eq__(self, other: Union[MatrixPointer, tuple[int, int], list[int, int]]) -> bool:
+        """Compares two `MatrixPointer` object's coordinates.
+
+        Note that comparing two `MatrixPointer` objects does not compare them for
+        identity, but rather two `MatrixPointers` are assumed to be equal iff they point
+        to the same coordinates, irrespective of whether they point to the same `Matrix`
+        object or now.
+
+        `MatrixPointer` objects can also be compared to lists or tupels of length 2, where
+        the first element will be treated as the row index and the second element as
+        the column index.
+
+        Returns:
+            True if the objects compared both point to the same coordinates, False
+            otherwise.
+        """
         if isinstance(other, MatrixPointer):
             other = (other.r, other.c)
         elif isinstance(other, list):
@@ -465,23 +738,47 @@ class MatrixPointer:
         raise NotImplemented
 
     def __hash__(self) -> int:
+        """Provides a hash based on the corrdinates pointed to by the pointer. Note that
+        the hash does not take into account the affiliated `Matrix` object, so the hashes
+        of two `MatrixPointer` objects pointing to the same coordinates but in different
+        `Matrix` objects will be identical.
+
+        Returns:
+            A numeric hash encoding the coordinates pointer is pointing to."""
         return hash((self.r, self.c))
 
     def __len__(self) -> int:
+        """Returns the length of the `MatrixPointer` (always 2).
+
+        Returns:
+            Returns the integer `2`, since `MatrixPointer` objects have a fixed
+            length of two."""
         return 2
 
     def copy(self) -> MatrixPointer:
-        """Returns a shallow copy of itself."""
+        """Returns a shallow copy of itself.
+
+        Returns:
+            A new `MatrixPointer` pointing to the same coordinates and affiliated with
+            the same `Matrix` object.
+        """
         return MatrixPointer(self.m, self.r, self.c)
 
     def __copy__(self) -> MatrixPointer:
-        """Returns a shallow copy of itself."""
+        """Returns a shallow copy of itself.
+
+        Returns:
+            A new `MatrixPointer` pointing to the same coordinates and affiliated with
+            the same `Matrix` object.
+        """
         return self.copy()
 
-    def mleft(self):
-        """Moves pointer one cell to the left.
+    def mleft(self) -> bool:
+        """Moves pointer one cell to the left in the affiliated `Matrix`.
 
-        Returns True on success, False if it is not possible to move leftward."""
+        Returns:
+            True on success, False if it is not possible to move further leftward.
+        """
         try:
             self.c -= 1
             return True
@@ -489,9 +786,11 @@ class MatrixPointer:
             return False
 
     def mright(self):
-        """Moves pointer on cell to the right.
+        """Moves pointer on cell to the right in the affiliated `Matrix`.
 
-        Returns True on success, False if it is not possible to move rightward."""
+        Returns:
+            True on success, False if it is not possible to move further rightward.
+        """
         try:
             self.c += 1
             return True
@@ -499,9 +798,11 @@ class MatrixPointer:
             return False
 
     def mup(self):
-        """Moves pointer one cell up.
+        """Moves pointer one cell up in the affiliated `Matrix`.
 
-        Returns True on success, False if it is not possible to move upward."""
+        Returns:
+            True on success, False if it is not possible to move further uptward.
+        """
         try:
             self.r -= 1
             return True
@@ -509,9 +810,11 @@ class MatrixPointer:
             return False
 
     def mupleft(self):
-        """Moves pointer one cell up and left.
+        """Moves pointer one cell up and left in the affiliated `Matrix`.
 
-        Returns True on success, False if it is not possible to move up and leftward."""
+        Returns:
+            True on success, False if it is not possible to move further up and leftward.
+        """
         if (self.r - 1) < 0 or (self.c - 1) < 0:
             return False
         try:
@@ -525,9 +828,11 @@ class MatrixPointer:
             return False
 
     def mupright(self):
-        """Moves pointer one cell up and right.
+        """Moves pointer one cell up and right in the affiliated `Matrix`.
 
-        Returns True on success, False if it is not possible to move up and rightward."""
+        Returns:
+            True on success, False if it is not possible to move further up and rightward.
+        """
         if (self.r - 1) < 0 or (self.c + 1) >= self.m.n_cols:
             return False
         try:
@@ -541,9 +846,11 @@ class MatrixPointer:
             return False
 
     def mdown(self):
-        """Moves pointer one cell down.
+        """Moves pointer one cell down in the affiliated `Matrix`.
 
-        Returns True on success, False if it is not possible to move downward."""
+        Returns:
+            True on success, False if it is not possible to move further downward.
+        """
         try:
             self.r += 1
             return True
@@ -551,9 +858,11 @@ class MatrixPointer:
             return False
 
     def mdownleft(self):
-        """Moves pointer one cell down and left.
+        """Moves pointer one cell down and left in the affiliated `Matrix`.
 
-        Returns True on success, False if it is not possible to move down and leftward."""
+        Returns:
+            True on success, False if it is not possible to move further down and leftward.
+        """
         if (self.r + 1) >= self.m.n_rows or (self.c - 1) < 0:
             return False
         try:
@@ -567,9 +876,11 @@ class MatrixPointer:
             return False
 
     def mdownright(self):
-        """Moves pointer one cell down and right.
+        """Moves pointer one cell down and right in the affiliated `Matrix`.
 
-        Returns True on success, False if it is not possible to move down and rightward."""
+        Returns:
+            True on success, False if it is not possible to move further down and rightward.
+        """
         if (self.r + 1) >= self.m.n_rows or (self.c + 1) >= self.m.n_cols:
             return False
         try:
@@ -583,78 +894,107 @@ class MatrixPointer:
             return False
 
     def cleft(self) -> Union[MatrixPointer, bool]:
-        """Returns a copy with pointer moved one cell left.
+        """Returns a copy of itself with pointer moved one cell left.
 
-        Returns MatrixPointer on success, False if it is not possible to move leftward."""
+        Returns:
+            MatrixPointer on success, False if it is not possible to move leftward.
+        """
         c = self.copy()
         if c.mleft():
             return c
         return False
 
     def cright(self) -> Union[MatrixPointer, bool]:
-        """Returns a copy with pointer moved one cell right.
+        """Returns a copy of itself with pointer moved one cell right.
 
-        Returns MatrixPointer on success, False if it is not possible to move rightward."""
+        Returns:
+            MatrixPointer on success, False if it is not possible to move rightward.
+        """
         c = self.copy()
         if c.mright():
             return c
         return False
 
     def cup(self) -> Union[MatrixPointer, bool]:
-        """Returns a copy with pointer moved one cell up.
+        """Returns a copy of itself with pointer moved one cell up.
 
-        Returns MatrixPointer on success, False if it is not possible to move upward."""
+        Returns:
+            MatrixPointer on success, False if it is not possible to move upward.
+        """
         c = self.copy()
         if c.mup():
             return c
         return False
 
     def cupleft(self) -> Union[MatrixPointer, bool]:
-        """Returns a copy with pointer moved one cell up and left.
+        """Returns a copy of itself with pointer moved one cell up and left.
 
-        Returns MatrixPointer on success, False if it is not possible to move up and leftward."""
+        Returns:
+            MatrixPointer on success, False if it is not possible to move up and leftward.
+        """
         c = self.copy()
         if c.mupleft():
             return c
         return False
 
     def cupright(self) -> Union[MatrixPointer, bool]:
-        """Returns a copy with pointer moved one cell up and right.
+        """Returns a copy of itself with pointer moved one cell up and right.
 
-        Returns MatrixPointer on success, False if it is not possible to move up and rightward."""
+        Returns:
+            MatrixPointer on success, False if it is not possible to move up and rightward.
+        """
         c = self.copy()
         if c.mupright():
             return c
         return False
 
     def cdown(self) -> Union[MatrixPointer, bool]:
-        """Returns a copy with pointer moved one cell down.
+        """Returns a copy of itself with pointer moved one cell down.
 
-        Returns MatrixPointer on success, False if it is not possible to move downward."""
+        Returns:
+            MatrixPointer on success, False if it is not possible to move downward.
+        """
         c = self.copy()
         if c.mdown():
             return c
         return False
 
     def cdownleft(self) -> Union[MatrixPointer, bool]:
-        """Returns a copy with pointer moved one cell down and left.
+        """Returns a copy of itself with pointer moved one cell down and left.
 
-        Returns MatrixPointer on success, False if it is not possible to move down and leftward."""
+        Returns:
+            MatrixPointer on success, False if it is not possible to move down and leftward.
+        """
         c = self.copy()
         if c.mdownleft():
             return c
         return False
 
     def cdownright(self) -> Union[MatrixPointer, bool]:
-        """Returns a copy with pointer moved one cell down and right.
+        """Returns a copy of itself with pointer moved one cell down and right.
 
-        Returns MatrixPointer on success, False if it is not possible to move down and rightward."""
+        Returns:
+            MatrixPointer on success, False if it is not possible to move down and rightward.
+        """
         c = self.copy()
         if c.mdownright():
             return c
         return False
 
     def directionto(self, other: MatrixPointer) -> Direction:
+        """Gets the direction in which another `MatrixPointer` points relative to itself.
+
+        Compares the coordinates of itself with the coordinates of `other` to determine
+        in which direction in the matrix the other pointer points relative to itself.
+        Note that for non-adjacent cells the granularity of the returned direction may be
+        below what is desired, for instance given a 3x3 matrix and a comparing a pointer
+        from (2, 2) to (0, 0) we will get Direction.NORTHWEST as expected, however we will
+        also get Direction.NORTHWEST comparing a pointer from (2, 2) to a pointer at
+        (1, 0) or (0, 1).
+
+        Returns:
+            The direction from this pointer to the other pointer as a `Direction` flag.
+        """
         dir = Direction.NONE
         if other.c < self.c:
             dir |= Direction.WEST
@@ -667,4 +1007,13 @@ class MatrixPointer:
         return dir
 
     def directionfrom(self, other: MatrixPointer) -> Direction:
+        """Gets the direction from another `MatrixPointer` toward itself.
+
+        A conviencence method providing the inverse of `directionto`, i.e.
+        `self.directionfrom(other)` is equivalent to `other.directionto(self)`.
+
+        Returns:
+            The direction from this pointer to the other pointer as a `Direction` flag.
+
+        """
         return other.directionto(self)
