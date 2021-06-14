@@ -63,7 +63,7 @@ class Direction(Flag):
             `Direction.SOUTH | Direction.WEST`.
         NORTHWEST: Compound direction indicating a move southwestward, identical to
             `Direction.NORTH | Direction.WEST`.
-        """
+    """
     NONE = 0
     NORTH = auto()
     EAST = auto()

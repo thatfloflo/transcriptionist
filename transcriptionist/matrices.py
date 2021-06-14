@@ -89,7 +89,8 @@ class Matrix:
             these in the new copy may also affect those in the original copy. If it is
             necessary to also carry out some operation on the cell values before copying
             them then `map` is a better choice. For example, to create a deep copy of
-            a `Matrix` itself containing numeric matrices:
+            a `Matrix` itself containing numeric matrices::
+
                 >>> m = Matrix(1, 1, Matrix(1, 1, 0))
                 [[[[0]]]]
                 >>> shallow = m.copy()
@@ -104,7 +105,6 @@ class Matrix:
                 [[[[2]]]]
                 >>> m
                 [[[[1]]]]
-
             """
         m = Matrix(self.n_rows, self.n_cols, self.default_value, self.row_labels, self.col_labels, self.cell_width)
         for r in range(0, self.n_rows):

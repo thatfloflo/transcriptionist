@@ -8,12 +8,27 @@ three operations permitted by Levenshtein distance: insertion, deletion, and sub
 A shortcut function `levdist` is provided to directly get the levenshtein distance
 between two sequences without having to construct and compute a `Levenshtein` object first.
 
-Example:
-    ld = Levenshtein("ABC", "ABxC")
+Example::
+
+    ld = Levenshtein("ABxC", "ABC")
     ld.compute()
-    print(f"The Levenshtein distance between 'ABC' and 'ABxC' is: {ld.distance}.")
-    print("The shortest edit sequence between the two strings is as follows:")
+    print(f"The distance between 'ABC' and 'ABxC' is: {ld.distance}.")
+    print("The shortest edit sequence between the two is:")
     print(ld.visualise())
+
+Example output::
+
+    The distance between 'ABC' and 'ABxC' is: 1
+    The shortest edit sequence between the two is:
+    +--------+---+---+---+---+
+    |Source  | A | B | x | C |
+    +--------+---+---+---+---+
+    |Target  | A | B |   | C |
+    +--------+---+---+---+---+
+    |Edits   |   |   | D |   |
+    +--------+---+---+---+---+
+    |Costs   | 0 | 0 | 1 | 0 |
+    +--------+---+---+---+---+
 """
 from __future__ import annotations
 from typing import Union, Sequence, Optional
