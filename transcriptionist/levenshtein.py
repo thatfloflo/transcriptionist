@@ -28,19 +28,12 @@ class Levenshtein:
     Levenshtein distance.
 
     Attributes:
-        source: The source sequence that is being edited to fit a target (read-only).
-        target: The target sequence that source is edited to match (read-only).
         insert_cost: The cost of insert operations on the sequence.
         delete_cost: The cost of delete operations on the sequence.
         substitute_cost: The cost of substitute operations on the sequence.
         computed: Boolean indicating whether the distance matrix has been fully computed
             or not. This is set to True automatically by `step` and `compute` if they
             reach the last cell of the matrix, but can also be (re)set manually.
-        dmatrix: Provides access to the distance matrix.
-        pmatrix: Provides access to a matrix of MatrixPointers indicating the path
-            of edits in the distance matrix.
-        ematrix: Provides a matrix of the edit operations that have had the least cost
-            in each cell.
     """
     __source: Sequence
     __target: Sequence
@@ -70,8 +63,8 @@ class Levenshtein:
             delete_cost: The cost of delete operations on the sequence.
             subsitute_cost: The cost of substitute operations on the sequence.
         """
-        self.source = source
-        self.target = target
+        self.__source = source
+        self.__target = target
         self.insert_cost = insert_cost
         self.delete_cost = delete_cost
         self.substitute_cost = substitute_cost
@@ -241,9 +234,19 @@ class Levenshtein:
         return self.__ptr
 
     @property
+    def source(self) -> Sequence:
+        """The source sequence that is being edited to fit a target (read-only)."""
+        return self.__source
+
+    @property
     def source_len(self) -> int:
         """The length of the source sequence (read-only)."""
         return len(self.source)
+
+    @property
+    def target(self) -> Sequence:
+        """The target sequence that source is edited to match (read-only)."""
+        return self.__target
 
     @property
     def target_len(self) -> int:
