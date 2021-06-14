@@ -12,11 +12,12 @@ Coordinate = Union[
     tuple[int, Optional[int]],
     list[Optional[int], int],
     list[int, Optional[int]],
-    'MatrixPointer'
+    "MatrixPointer",
 ]
 """Compound type hint for methods that accept complex inputs for a coordinate in the form
 of either a Matrix pointer, or a 2 member tuple or list where at least one value is an
 integer and the other either None or an integer."""
+
 
 class Matrix:
     """Simple implementation of two-dimensional matrices of specified dimensions.
@@ -43,7 +44,7 @@ class Matrix:
         default_value: Any = None,
         row_labels: Optional[Sequence] = None,
         col_labels: Optional[Sequence] = None,
-        cell_width: Optional[int] = 0
+        cell_width: Optional[int] = 0,
     ):
         """Creates a new matrix of specified dimensions.
 
@@ -66,7 +67,9 @@ class Matrix:
         if not isinstance(cols, int):
             raise TypeError("Argument `cols` must be of type int.")
         if rows < 1 or cols < 1:
-            raise ValueError(f"Matrix dimensions must be at least 1x1, {rows}x{cols} specified.")
+            raise ValueError(
+                f"Matrix dimensions must be at least 1x1, {rows}x{cols} specified."
+            )
         self.default_value = default_value
         self.__cells = {}
         self.__n_rows = rows
@@ -105,15 +108,15 @@ class Matrix:
                 [[[[2]]]]
                 >>> m
                 [[[[1]]]]
-            """
+        """
         m = Matrix(
-                self.n_rows,
-                self.n_cols,
-                self.default_value,
-                self.row_labels,
-                self.col_labels,
-                self.cell_width
-            )
+            self.n_rows,
+            self.n_cols,
+            self.default_value,
+            self.row_labels,
+            self.col_labels,
+            self.cell_width,
+        )
         for r in range(0, self.n_rows):
             for c in range(0, self.n_cols):
                 m[r, c] = self[r, c]
@@ -164,15 +167,19 @@ class Matrix:
         try:
             length = len(row_labels)
         except TypeError as exc:
-            raise TypeError((
-                "Row labels must be a either None or a Sequence type with a length, "
-                 " object of type '{type(row_labels}' has no len()."
-            )) from exc
+            raise TypeError(
+                (
+                    "Row labels must be a either None or a Sequence type with a length, "
+                    " object of type '{type(row_labels}' has no len()."
+                )
+            ) from exc
         if length is not self.n_rows:
-            raise ValueError((
-                f"Row labels must be the same length as number of rows in the matrix. "
-                f"Length of labels: {length}, number of rows: {self.n_rows}"
-            ))
+            raise ValueError(
+                (
+                    f"Row labels must be the same length as number of rows in the matrix. "
+                    f"Length of labels: {length}, number of rows: {self.n_rows}"
+                )
+            )
         self.__row_labels = row_labels
 
     @property
@@ -196,15 +203,19 @@ class Matrix:
         try:
             length = len(col_labels)
         except TypeError as exc:
-            raise TypeError((
-                f"Column labels must be a either None or a sequence type with a length, "
-                f"object of type '{type(col_labels)}' has no len()."
-            )) from exc
+            raise TypeError(
+                (
+                    f"Column labels must be a either None or a sequence type with a length, "
+                    f"object of type '{type(col_labels)}' has no len()."
+                )
+            ) from exc
         if length is not self.n_cols:
-            raise ValueError((
-                f"Column labels must be the same length as number of columns in the "
-                f"matrix. Length of labels: {length}, number of columns: {self.n_cols}"
-            ))
+            raise ValueError(
+                (
+                    f"Column labels must be the same length as number of columns in the "
+                    f"matrix. Length of labels: {length}, number of columns: {self.n_cols}"
+                )
+            )
         self.__col_labels = col_labels
 
     @property
@@ -220,7 +231,9 @@ class Matrix:
     def cell_width(self, cell_width: int = 0):
         cell_width = int(cell_width)
         if cell_width < 0:
-            raise ValueError(f"Cell width must be greater or equal to 0, {cell_width} specified.")
+            raise ValueError(
+                f"Cell width must be greater or equal to 0, {cell_width} specified."
+            )
         self.__cell_width = cell_width
 
     @property
@@ -241,7 +254,7 @@ class Matrix:
             buf.append(self.getrow(r))
         return buf
 
-    def __wrap_row(self, row:int) -> int:
+    def __wrap_row(self, row: int) -> int:
         """Wraps a negative row index back by substracting from n_rows."""
         if row < 0:
             return self.n_rows + row
@@ -261,7 +274,9 @@ class Matrix:
             matrix.
         """
         if row not in range(0, self.n_rows):
-            raise IndexError(f"Trying to access row {row} of matrix with {self.n_rows} rows.")
+            raise IndexError(
+                f"Trying to access row {row} of matrix with {self.n_rows} rows."
+            )
 
     def __validate_col_index(self, col: int):
         """Checks if given column index is in range, raises IndexError if not.
@@ -270,7 +285,9 @@ class Matrix:
             IndexError: Raised if `col` is not inbetween 0 and the number of columns in the matrix.
         """
         if col not in range(0, self.n_cols):
-            raise IndexError(f"Trying to access column {col} of matrix with {self.n_cols} columns.")
+            raise IndexError(
+                f"Trying to access column {col} of matrix with {self.n_cols} columns."
+            )
 
     @multimethod
     def getitem(self, row: int, col: int = None) -> Any:
@@ -376,10 +393,12 @@ class Matrix:
         row = self.__wrap_row(row)
         self.__validate_row_index(row)
         if len(values) != self.n_cols:
-            raise ValueError((
-                "Sequence of supplied row values must have equal length to number of "
-                "matrix columns."
-            ))
+            raise ValueError(
+                (
+                    "Sequence of supplied row values must have equal length to number of "
+                    "matrix columns."
+                )
+            )
         for i in range(0, self.n_cols):
             self[row, i] = values[i]
 
@@ -417,10 +436,12 @@ class Matrix:
         col = self.__wrap_col(col)
         self.__validate_col_index(col)
         if len(values) != self.n_rows:
-            raise ValueError((
-                "Sequence of supplied column values must have equal length to number "
-                "of matrix rows."
-            ))
+            raise ValueError(
+                (
+                    "Sequence of supplied column values must have equal length to number "
+                    "of matrix rows."
+                )
+            )
         for i in range(0, self.n_rows):
             self[i, col] = values[i]
 
@@ -444,9 +465,12 @@ class Matrix:
             key = (key.r, key.c)
         if isinstance(key, list):
             key = tuple(key)
-        if (isinstance(key, tuple) and len(key) == 2
+        if (
+            isinstance(key, tuple)
+            and len(key) == 2
             and isinstance(key[0], (int, type(None)))
-            and isinstance(key[1], (int, type(None)))):
+            and isinstance(key[1], (int, type(None)))
+        ):
             row, col = key
             if row is not None and col is not None:
                 return self.getitem(row, col)
@@ -455,10 +479,12 @@ class Matrix:
             if row is None and col is not None:
                 return self.getcol(col)
             if row is None and col is None:
-                raise IndexError((
-                    "At least one index value (row, col) must be supplied, "
-                    "(None, None) given."
-                ))
+                raise IndexError(
+                    (
+                        "At least one index value (row, col) must be supplied, "
+                        "(None, None) given."
+                    )
+                )
         raise TypeError("Key must be either of type tuple[int, int] or list[int, int].")
 
     def __setitem__(self, key: Coordinate, value: Union[Any, Sequence]):
@@ -482,9 +508,12 @@ class Matrix:
             key = (key.r, key.c)
         if isinstance(key, list):
             key = tuple(key)
-        if (isinstance(key, tuple) and len(key) == 2
+        if (
+            isinstance(key, tuple)
+            and len(key) == 2
             and isinstance(key[0], (int, type(None)))
-            and isinstance(key[1], (int, type(None)))):
+            and isinstance(key[1], (int, type(None)))
+        ):
             row, col = key
             if row is not None and col is not None:
                 return self.setitem(row, col, value)
@@ -493,12 +522,13 @@ class Matrix:
             if row is None and col is not None:
                 return self.setcol(col, value)
             if row is None and col is None:
-                raise IndexError((
-                    "At least one index value (row, col) must be supplied, "
-                    "(None, None) given."
-                ))
+                raise IndexError(
+                    (
+                        "At least one index value (row, col) must be supplied, "
+                        "(None, None) given."
+                    )
+                )
         raise TypeError("Key must be either of type tuple[int, int] or list[int, int].")
-
 
     def __bool__(self) -> bool:
         """Returns False if all the cells of the matrix are identical to `default_value`,
@@ -513,7 +543,7 @@ class Matrix:
         self,
         row_labels: Optional[Sequence] = None,
         col_labels: Optional[Sequence] = None,
-        cell_width: Optional[int] = 0
+        cell_width: Optional[int] = 0,
     ) -> str:
         """Returns an informative string representation of the matrix.
 
@@ -533,11 +563,11 @@ class Matrix:
         for r in range(0, self.n_rows):
             if r == 0 and col_labels is not None:
                 if row_labels is not None:
-                    buf += ''.ljust(cell_width) + " " # Empty cell
-                buf += "  " # Cover distance of "[ "
+                    buf += "".ljust(cell_width) + " "  # Empty cell
+                buf += "  "  # Cover distance of "[ "
                 for label in col_labels:
                     buf += str(label).ljust(cell_width)
-                    buf += "  " # Add space in lieu for ", "
+                    buf += "  "  # Add space in lieu for ", "
             if r == 0:
                 buf += "\n"
             if r > 0:
@@ -562,7 +592,7 @@ class Matrix:
         return self.stringify(
             row_labels=self.row_labels,
             col_labels=self.col_labels,
-            cell_width=self.cell_width
+            cell_width=self.cell_width,
         )
 
     def __repr__(self) -> str:
@@ -600,13 +630,13 @@ class Matrix:
             of the matrix.
         """
         m = Matrix(
-                self.n_rows,
-                self.n_cols,
-                self.default_value,
-                self.row_labels,
-                self.col_labels,
-                self.cell_width
-            )
+            self.n_rows,
+            self.n_cols,
+            self.default_value,
+            self.row_labels,
+            self.col_labels,
+            self.cell_width,
+        )
         for r in range(0, self.n_rows):
             for c in range(0, self.n_cols):
                 m[r, c] = function(self[r, c])
@@ -620,6 +650,7 @@ class MatrixPointer:
     a `Matrix` object, guarding against exceeding the associated matrix's row and column
     range and providing a number of convenince functions to traverse the matrix.
     """
+
     __r: int
     __c: int
     __m: Matrix
@@ -684,10 +715,12 @@ class MatrixPointer:
     @r.setter
     def r(self, r: int):
         if r >= self.m.n_rows:
-            raise ValueError((
-                f"Attempt to assign value out of range of matrix dimensions: "
-                f"(r = {r}) >= {self.m.n_rows}"
-            ))
+            raise ValueError(
+                (
+                    f"Attempt to assign value out of range of matrix dimensions: "
+                    f"(r = {r}) >= {self.m.n_rows}"
+                )
+            )
         self.__r = int(r)
 
     @property
@@ -703,10 +736,12 @@ class MatrixPointer:
     @c.setter
     def c(self, c: int):
         if c >= self.m.n_cols:
-            raise ValueError((
-                f"Attempt to assign value out of range of matrix dimensions: "
-                f"(c = {c}) >= {self.m.n_cols}"
-            ))
+            raise ValueError(
+                (
+                    f"Attempt to assign value out of range of matrix dimensions: "
+                    f"(c = {c}) >= {self.m.n_cols}"
+                )
+            )
         self.__c = int(c)
 
     def __getitem__(self, key: int) -> int:
@@ -734,7 +769,9 @@ class MatrixPointer:
         if not isinstance(key, int):
             raise TypeError("Index on MatrixPointer is only defined for integers.")
         if not isinstance(value, int):
-            raise ValueError("MatrixPointer coordinates can only be assigned integer values.")
+            raise ValueError(
+                "MatrixPointer coordinates can only be assigned integer values."
+            )
         if key == 0:
             self.r = value
             return
@@ -761,7 +798,9 @@ class MatrixPointer:
         """
         return f"[{self.r}, {self.c}]"
 
-    def __eq__(self, other: Union[MatrixPointer, tuple[int, int], list[int, int]]) -> bool:
+    def __eq__(
+        self, other: Union[MatrixPointer, tuple[int, int], list[int, int]]
+    ) -> bool:
         """Compares two `MatrixPointer` object's coordinates.
 
         Note that comparing two `MatrixPointer` objects does not compare them for
