@@ -106,7 +106,14 @@ class Matrix:
                 >>> m
                 [[[[1]]]]
             """
-        m = Matrix(self.n_rows, self.n_cols, self.default_value, self.row_labels, self.col_labels, self.cell_width)
+        m = Matrix(
+                self.n_rows,
+                self.n_cols,
+                self.default_value,
+                self.row_labels,
+                self.col_labels,
+                self.cell_width
+            )
         for r in range(0, self.n_rows):
             for c in range(0, self.n_cols):
                 m[r, c] = self[r, c]
@@ -156,10 +163,16 @@ class Matrix:
             return
         try:
             length = len(row_labels)
-        except TypeError:
-            raise TypeError("Row labels must be a either None or a Sequence type with a length, object of type '{type(row_labels}' has no len().")
+        except TypeError as exc:
+            raise TypeError((
+                "Row labels must be a either None or a Sequence type with a length, "
+                 " object of type '{type(row_labels}' has no len()."
+            )) from exc
         if length is not self.n_rows:
-            raise ValueError(f"Row labels must be the same length as number of rows in the matrix. Length of labels: {length}, number of rows: {self.n_rows}")
+            raise ValueError((
+                f"Row labels must be the same length as number of rows in the matrix. "
+                f"Length of labels: {length}, number of rows: {self.n_rows}"
+            ))
         self.__row_labels = row_labels
 
     @property
@@ -182,10 +195,16 @@ class Matrix:
             return
         try:
             length = len(col_labels)
-        except TypeError:
-            raise TypeError("Column labels must be a either None or a sequence type with a length, object of type '{type(col_labels}' has no len().")
+        except TypeError as exc:
+            raise TypeError((
+                f"Column labels must be a either None or a sequence type with a length, "
+                f"object of type '{type(col_labels)}' has no len()."
+            )) from exc
         if length is not self.n_cols:
-            raise ValueError(f"Column labels must be the same length as number of columns in the matrix. Length of labels: {length}, number of columns: {self.n_cols}")
+            raise ValueError((
+                f"Column labels must be the same length as number of columns in the "
+                f"matrix. Length of labels: {length}, number of columns: {self.n_cols}"
+            ))
         self.__col_labels = col_labels
 
     @property
@@ -206,7 +225,8 @@ class Matrix:
 
     @property
     def cols(self) -> list:
-        """Provides list access to the matrix's columns, each of which is a list containing row values."""
+        """Provides list access to the matrix's columns, each of which is a list
+        containing row values."""
         buf = []
         for c in range(0, self.n_cols):
             buf.append(self.getcol(c))
@@ -214,7 +234,8 @@ class Matrix:
 
     @property
     def rows(self) -> list:
-        """Provides list access to the matrix's rows, each of which is a list containing column values."""
+        """Provides list access to the matrix's rows, each of which is a list containing
+        column values."""
         buf = []
         for r in range(0, self.n_rows):
             buf.append(self.getrow(r))
@@ -236,7 +257,8 @@ class Matrix:
         """Checks if given row index is in range, raises IndexError if not.
 
         Raises:
-            IndexError: Raised if `row` is not inbetween 0 and the number of rows in the matrix.
+            IndexError: Raised if `row` is not inbetween 0 and the number of rows in the
+            matrix.
         """
         if row not in range(0, self.n_rows):
             raise IndexError(f"Trying to access row {row} of matrix with {self.n_rows} rows.")
@@ -354,7 +376,10 @@ class Matrix:
         row = self.__wrap_row(row)
         self.__validate_row_index(row)
         if len(values) != self.n_cols:
-            raise ValueError("Sequence of supplied row values must have equal length to number of matrix columns.")
+            raise ValueError((
+                "Sequence of supplied row values must have equal length to number of "
+                "matrix columns."
+            ))
         for i in range(0, self.n_cols):
             self[row, i] = values[i]
 
@@ -392,7 +417,10 @@ class Matrix:
         col = self.__wrap_col(col)
         self.__validate_col_index(col)
         if len(values) != self.n_rows:
-            raise ValueError("Sequence of supplied column values must have equal length to number of matrix rows.")
+            raise ValueError((
+                "Sequence of supplied column values must have equal length to number "
+                "of matrix rows."
+            ))
         for i in range(0, self.n_rows):
             self[i, col] = values[i]
 
@@ -416,7 +444,9 @@ class Matrix:
             key = (key.r, key.c)
         if isinstance(key, list):
             key = tuple(key)
-        if isinstance(key, tuple) and len(key) == 2 and isinstance(key[0], (int, type(None))) and isinstance(key[1], (int, type(None))):
+        if (isinstance(key, tuple) and len(key) == 2
+            and isinstance(key[0], (int, type(None)))
+            and isinstance(key[1], (int, type(None)))):
             row, col = key
             if row is not None and col is not None:
                 return self.getitem(row, col)
@@ -425,8 +455,11 @@ class Matrix:
             if row is None and col is not None:
                 return self.getcol(col)
             if row is None and col is None:
-                raise IndexError("At least one index value (row, col) must be supplied, (None, None) given.")
-        raise TypeError(f"Key must be either of type tuple[int, int] or list[int, int].")
+                raise IndexError((
+                    "At least one index value (row, col) must be supplied, "
+                    "(None, None) given."
+                ))
+        raise TypeError("Key must be either of type tuple[int, int] or list[int, int].")
 
     def __setitem__(self, key: Coordinate, value: Union[Any, Sequence]):
         """Sets item at coordinates `row` and `col` to value.
@@ -449,7 +482,9 @@ class Matrix:
             key = (key.r, key.c)
         if isinstance(key, list):
             key = tuple(key)
-        if isinstance(key, tuple) and len(key) == 2 and isinstance(key[0], (int, type(None))) and isinstance(key[1], (int, type(None))):
+        if (isinstance(key, tuple) and len(key) == 2
+            and isinstance(key[0], (int, type(None)))
+            and isinstance(key[1], (int, type(None)))):
             row, col = key
             if row is not None and col is not None:
                 return self.setitem(row, col, value)
@@ -458,12 +493,16 @@ class Matrix:
             if row is None and col is not None:
                 return self.setcol(col, value)
             if row is None and col is None:
-                raise IndexError("At least one index value (row, col) must be supplied, (None, None) given.")
-        raise TypeError(f"Key must be either of type tuple[int, int] or list[int, int].")
+                raise IndexError((
+                    "At least one index value (row, col) must be supplied, "
+                    "(None, None) given."
+                ))
+        raise TypeError("Key must be either of type tuple[int, int] or list[int, int].")
 
 
     def __bool__(self) -> bool:
-        """Returns False if all the cells of the matrix are identical to `default_value`, True otherwise."""
+        """Returns False if all the cells of the matrix are identical to `default_value`,
+        True otherwise."""
         for r in range(0, self.n_rows):
             for c in range(0, self.n_cols):
                 if self.__cells[(r, c)] is not self.default_value:
@@ -518,7 +557,8 @@ class Matrix:
         return buf
 
     def __str__(self) -> str:
-        """Returns an informative string representation of the matrix using object's default labels and cell width."""
+        """Returns an informative string representation of the matrix using object's
+        default labels and cell width."""
         return self.stringify(
             row_labels=self.row_labels,
             col_labels=self.col_labels,
@@ -559,10 +599,17 @@ class Matrix:
             A shallow copy of itself with `function` applied to every cell of the new copy
             of the matrix.
         """
-        m = Matrix(self.n_rows, self.n_cols, self.default_value, self.row_labels, self.col_labels, self.cell_width)
+        m = Matrix(
+                self.n_rows,
+                self.n_cols,
+                self.default_value,
+                self.row_labels,
+                self.col_labels,
+                self.cell_width
+            )
         for r in range(0, self.n_rows):
             for c in range(0, self.n_cols):
-                m[r, c] = func(self[r, c])
+                m[r, c] = function(self[r, c])
         return m
 
 
@@ -637,7 +684,10 @@ class MatrixPointer:
     @r.setter
     def r(self, r: int):
         if r >= self.m.n_rows:
-            raise ValueError(f"Attempt to assign value out of range of matrix dimensions: (r = {r}) >= {self.m.n_rows}")
+            raise ValueError((
+                f"Attempt to assign value out of range of matrix dimensions: "
+                f"(r = {r}) >= {self.m.n_rows}"
+            ))
         self.__r = int(r)
 
     @property
@@ -653,7 +703,10 @@ class MatrixPointer:
     @c.setter
     def c(self, c: int):
         if c >= self.m.n_cols:
-            raise ValueError(f"Attempt to assign value out of range of matrix dimensions: (c = {c}) >= {self.m.n_cols}")
+            raise ValueError((
+                f"Attempt to assign value out of range of matrix dimensions: "
+                f"(c = {c}) >= {self.m.n_cols}"
+            ))
         self.__c = int(c)
 
     def __getitem__(self, key: int) -> int:
@@ -730,12 +783,9 @@ class MatrixPointer:
             other = tuple(other)
         if isinstance(other, tuple):
             if len(other) != 2:
-                raise NotImplemented
-            if (self.r, self.c) == other:
-                return True
-            else:
-                return False
-        raise NotImplemented
+                return NotImplemented
+            return bool((self.r, self.c) == other)
+        return NotImplemented
 
     def __hash__(self) -> int:
         """Provides a hash based on the corrdinates pointed to by the pointer. Note that
