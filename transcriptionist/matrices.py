@@ -552,7 +552,7 @@ class Matrix:
                     return True
         return False
 
-    def stringify(
+    def stringify(  # noqa: C901
         self,
         row_labels: Optional[Sequence] = None,
         col_labels: Optional[Sequence] = None,
@@ -581,27 +581,23 @@ class Matrix:
                 for label in col_labels:
                     buf += str(label).ljust(cell_width)
                     buf += "  "  # Add space in lieu for ", "
-            if r == 0:
-                buf += "\n"
-            if r > 0:
-                buf += " ]\n"
+            buf += "\n" if r == 0 else "]\n"
             for c in range(0, self.n_cols):
                 if c == 0:
                     if row_labels is not None:
                         if r < len(row_labels):
-                            buf += str(row_labels[r]).ljust(cell_width) + " "
+                            buf += str(row_labels[r]).ljust(cell_width)
                         else:
-                            buf += " " * cell_width + " "
+                            buf += " " * cell_width
+                        buf += " "
                     buf += "[ "
-                if c > 0:
-                    buf += ", "
+                buf += ", " if c > 0 else ""
                 buf += str(self[r, c]).ljust(cell_width)
         buf += " ]"
         return buf
 
     def __str__(self) -> str:
-        """Returns an informative string representation of the matrix using object's
-        default labels and cell width."""
+        """Returns a human-readable string representation of the matrix."""
         return self.stringify(
             row_labels=self.row_labels,
             col_labels=self.col_labels,
@@ -632,7 +628,7 @@ class Matrix:
             for c in range(0, self.n_cols):
                 self[r, c] = function(self[r, c])
 
-    def map(self, function: callable) -> Matrix:
+    def map(self, function: callable) -> Matrix:  # noqa: A003
         """Returns a copy of the matrix with 'function' applied to every cell.
 
         Args:
@@ -698,7 +694,8 @@ class MatrixPointer:
         Returns:
             True if pointer has been advanced, False otherwise. A return value of False
             means the last cell of the matrix has been reached, meaning the return value
-            of `advance` can be used to loop over a matrix in a while loop."""
+            of `advance` can be used to loop over a matrix in a while loop.
+        """
         try:
             self.c += 1
             return True
@@ -779,6 +776,7 @@ class MatrixPointer:
         raise IndexError("Index for MatrixPointer must be in range [0, 1].")
 
     def __setitem__(self, key: int, value: int):
+        """Sets item at provided coordinates to `value`."""
         if not isinstance(key, int):
             raise TypeError("Index on MatrixPointer is only defined for integers.")
         if not isinstance(value, int):
@@ -794,22 +792,26 @@ class MatrixPointer:
         raise IndexError("Index for MatrixPointer must be in range [0, 1]")
 
     def __repr__(self) -> str:
-        """Provides a parseable list representation of the coordinates pointed to by the
-        pointer.
+        """Provides parseable representation of the MatrixPointer's coordinates.
+
+        Note:
+            Note that evaluating this representation will *not* recreate the
+            MatrixPointer, since MatrixPointers are always tied to another Matrix object.
+            Instead, repr() will return a tuple with the coordinates pointed to which
+            can then be used to reconstruct a MatrixPointer manually.
 
         Returns:
-            A parseable string representation of the pointer.
+            A parseable string representation of a tuple of the form `(row, col)`.
         """
-        return f"[{self.r}, {self.c}]"
+        return f"({self.r}, {self.c})"
 
     def __str__(self) -> str:
-        """Provides a human readable string representation of the coordinates pointed to
-        by the pointer.
+        """Provides a human-readable string representation of the MatrixPointer.
 
         Returns:
-            A string representation of the pointer.
+            A string showing the coordinates pointed to by the MatrixPointer.
         """
-        return f"[{self.r}, {self.c}]"
+        return f"({self.r}, {self.c})"
 
     def __eq__(
         self, other: Union[MatrixPointer, tuple[int, int], list[int, int]]
@@ -840,13 +842,16 @@ class MatrixPointer:
         return NotImplemented
 
     def __hash__(self) -> int:
-        """Provides a hash based on the corrdinates pointed to by the pointer. Note that
-        the hash does not take into account the affiliated `Matrix` object, so the hashes
-        of two `MatrixPointer` objects pointing to the same coordinates but in different
-        `Matrix` objects will be identical.
+        """Provides a hash based on the corrdinates pointed to by the pointer.
+
+        Note:
+            Note that the hash does not take into account the affiliated `Matrix` object,
+            so the hashes of two `MatrixPointer` objects pointing to the same coordinates
+            but in different `Matrix` objects will be identical.
 
         Returns:
-            A numeric hash encoding the coordinates pointer is pointing to."""
+            A numeric hash encoding the coordinates pointer is pointing to.
+        """
         return hash((self.r, self.c))
 
     def __len__(self) -> int:
@@ -854,7 +859,8 @@ class MatrixPointer:
 
         Returns:
             Returns the integer `2`, since `MatrixPointer` objects have a fixed
-            length of two."""
+            length of two.
+        """
         return 2
 
     def copy(self) -> MatrixPointer:
@@ -963,7 +969,8 @@ class MatrixPointer:
         """Moves pointer one cell down and left in the affiliated `Matrix`.
 
         Returns:
-            True on success, False if it is not possible to move further down and leftward.
+            True on success, False if it is not possible to move further down
+            and leftward.
         """
         if (self.r + 1) >= self.m.n_rows or (self.c - 1) < 0:
             return False
@@ -981,7 +988,8 @@ class MatrixPointer:
         """Moves pointer one cell down and right in the affiliated `Matrix`.
 
         Returns:
-            True on success, False if it is not possible to move further down and rightward.
+            True on success, False if it is not possible to move further down
+            and rightward.
         """
         if (self.r + 1) >= self.m.n_rows or (self.c + 1) >= self.m.n_cols:
             return False
@@ -1043,7 +1051,8 @@ class MatrixPointer:
         """Returns a copy of itself with pointer moved one cell up and right.
 
         Returns:
-            MatrixPointer on success, False if it is not possible to move up and rightward.
+            MatrixPointer on success, False if it is not possible to move up
+            and rightward.
         """
         c = self.copy()
         if c.mupright():
@@ -1065,7 +1074,8 @@ class MatrixPointer:
         """Returns a copy of itself with pointer moved one cell down and left.
 
         Returns:
-            MatrixPointer on success, False if it is not possible to move down and leftward.
+            MatrixPointer on success, False if it is not possible to move down
+            and leftward.
         """
         c = self.copy()
         if c.mdownleft():
@@ -1076,7 +1086,8 @@ class MatrixPointer:
         """Returns a copy of itself with pointer moved one cell down and right.
 
         Returns:
-            MatrixPointer on success, False if it is not possible to move down and rightward.
+            MatrixPointer on success, False if it is not possible to move down
+            and rightward.
         """
         c = self.copy()
         if c.mdownright():
@@ -1097,16 +1108,16 @@ class MatrixPointer:
         Returns:
             The direction from this pointer to the other pointer as a `Direction` flag.
         """
-        dir = Direction.NONE
+        direction = Direction.NONE
         if other.c < self.c:
-            dir |= Direction.WEST
+            direction |= Direction.WEST
         elif other.c > self.c:
-            dir |= Direction.EAST
+            direction |= Direction.EAST
         if other.r < self.r:
-            dir |= Direction.NORTH
+            direction |= Direction.NORTH
         elif other.r > self.r:
-            dir |= Direction.SOUTH
-        return dir
+            direction |= Direction.SOUTH
+        return direction
 
     def directionfrom(self, other: MatrixPointer) -> Direction:
         """Gets the direction from another `MatrixPointer` toward itself.
