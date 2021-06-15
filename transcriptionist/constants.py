@@ -5,6 +5,7 @@ package.
 """
 from enum import Flag, auto
 
+
 class EditOperation(Flag):
     """Flaggable enumeration of string edit operations.
 
@@ -14,6 +15,7 @@ class EditOperation(Flag):
         DELETE: Indicates that a delete operation has taken place.
         SUBSTITUTE: Indicates that a substitute operation has taken place.
         TRANSPOSE: Indicates that a transpose operation has taken place."""
+
     NONE = 0
     INSERT = auto()
     DELETE = auto()
@@ -23,11 +25,12 @@ class EditOperation(Flag):
     def code(self) -> str:
         """Returns a string representation of the edit operation assigning a single
         character to each operation."""
-        buf = ''
+        buf = ""
         for name, member in EditOperation.__members__.items():
             if self & member:
                 buf += name[0]
         return buf
+
 
 class Direction(Flag):
     """Flaggable enumeration of directions, e.g. to move in a matrix.
@@ -64,6 +67,7 @@ class Direction(Flag):
         NORTHWEST: Compound direction indicating a move southwestward, identical to
             `Direction.NORTH | Direction.WEST`.
     """
+
     NONE = 0
     NORTH = auto()
     EAST = auto()
@@ -82,20 +86,20 @@ class Direction(Flag):
         and not for other potential compound directions such as
         `Direction.NORTH | Direction.SOUTH`."""
         if self == Direction.NORTHEAST:
-            return '↗'
+            return "↗"
         if self == Direction.SOUTHEAST:
-            return '↘'
+            return "↘"
         if self == Direction.SOUTHWEST:
-            return '↙'
+            return "↙"
         if self == Direction.NORTHWEST:
-            return '↖'
+            return "↖"
         if self == Direction.NORTH:
-            return '↑'
+            return "↑"
         if self == Direction.EAST:
-            return '→'
+            return "→"
         if self == Direction.SOUTH:
-            return '↓'
+            return "↓"
         if self == Direction.WEST:
-            return '←'
+            return "←"
         if self == Direction.NONE:
-            return '○'
+            return "○"

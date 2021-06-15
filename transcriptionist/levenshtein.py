@@ -38,6 +38,7 @@ from .constants import Direction, EditOperation as EdOp
 Numeric = Union[int, float]
 """Generic type hint accepting either `int` or `float`."""
 
+
 class Levenshtein:
     """An object-oriented implementation of the Wagner-Fischer algorithm for the
     Levenshtein distance.
@@ -50,15 +51,16 @@ class Levenshtein:
             or not. This is set to True automatically by `step` and `compute` if they
             reach the last cell of the matrix, but can also be (re)set manually.
     """
+
     __source: Sequence
     __target: Sequence
     insert_cost: Numeric
     delete_cost: Numeric
     subsitute_cost: Numeric
     computed: bool = False
-    __dmatrix: Matrix      # Distance matrix
-    __pmatrix: Matrix      # Pointer matrix (edit path)
-    __ematrix: Matrix      # Edit matrix
+    __dmatrix: Matrix  # Distance matrix
+    __pmatrix: Matrix  # Pointer matrix (edit path)
+    __ematrix: Matrix  # Edit matrix
     __ptr: MatrixPointer
 
     def __init__(
@@ -67,7 +69,7 @@ class Levenshtein:
         target: Sequence,
         insert_cost: Numeric = 1,
         delete_cost: Numeric = 1,
-        substitute_cost: Numeric = 1
+        substitute_cost: Numeric = 1,
     ) -> None:
         """Creates a new Levenshtein object for calculating levenshtein distance.
 
@@ -95,10 +97,10 @@ class Levenshtein:
         return Matrix(
             len(self.source) + 1,
             len(self.target) + 1,
-            default_value = 0,
-            row_labels = [''] + list(self.source),
-            col_labels = [''] + list(self.target),
-            cell_width = 1
+            default_value=0,
+            row_labels=[""] + list(self.source),
+            col_labels=[""] + list(self.target),
+            cell_width=1,
         )
 
     def advance(self) -> bool:
@@ -117,7 +119,9 @@ class Levenshtein:
         """
         return self.ptr.advance()
 
-    def matrix_assign(self, dvalue: Numeric, pvalue: MatrixPointer, evalue: EdOp) -> None:
+    def matrix_assign(
+        self, dvalue: Numeric, pvalue: MatrixPointer, evalue: EdOp
+    ) -> None:
         """Makes parallel assignment at current position in distance, pointer, and edit matrices.
 
         Args:
@@ -151,24 +155,20 @@ class Levenshtein:
         """
         # Special cases
         if self.ptr == (0, 0):
-            self.matrix_assign(
-                0,
-                self.ptr.copy(),
-                EdOp.NONE
-            )
+            self.matrix_assign(0, self.ptr.copy(), EdOp.NONE)
             return
         if self.ptr.r == 0:
             self.matrix_assign(
                 self.dmatrix[self.ptr.cleft()] + self.insert_cost,
                 self.ptr.cleft(),
-                EdOp.INSERT
+                EdOp.INSERT,
             )
             return
         if self.ptr.c == 0:
             self.matrix_assign(
                 self.dmatrix[self.ptr.cup()] + self.delete_cost,
                 self.ptr.cup(),
-                EdOp.DELETE
+                EdOp.DELETE,
             )
             return
         # Get values for surrounding three cells
@@ -187,28 +187,20 @@ class Levenshtein:
         deletion = self.dmatrix[self.ptr.cup()] + self.delete_cost
         substitution = self.dmatrix[self.ptr.cupleft()] + substitute_cost
         if insertion < deletion and insertion < substitution:
-            self.matrix_assign(
-                insertion,
-                self.ptr.cleft(),
-                EdOp.INSERT
-            )
+            self.matrix_assign(insertion, self.ptr.cleft(), EdOp.INSERT)
             return
         if deletion < insertion and deletion < substitution:
-            self.matrix_assign(
-                deletion,
-                self.ptr.cup(),
-                EdOp.DELETE
-            )
+            self.matrix_assign(deletion, self.ptr.cup(), EdOp.DELETE)
             return
         if substitution <= insertion and substitution <= deletion:
-            self.matrix_assign(
-                substitution,
-                self.ptr.cupleft(),
-                substitute_edop
-            )
+            self.matrix_assign(substitution, self.ptr.cupleft(), substitute_edop)
             return
-        raise ValueError(("It seems you've found a bug in the calculation algorithm. "
-                          "The calculation algorithm should never get to this point..."))
+        raise ValueError(
+            (
+                "It seems you've found a bug in the calculation algorithm. "
+                "The calculation algorithm should never get to this point..."
+            )
+        )
 
     def step(self) -> bool:
         """Calculates the current cell and moves the pointer to next cell.
@@ -343,7 +335,9 @@ class Levenshtein:
             * Perhaps implement some check or fallback to detect/handle a pointer loop?
         """
         if self.computed:
-            end = MatrixPointer(self.dmatrix, self.dmatrix.n_rows - 1, self.dmatrix.n_cols - 1)
+            end = MatrixPointer(
+                self.dmatrix, self.dmatrix.n_rows - 1, self.dmatrix.n_cols - 1
+            )
             start = MatrixPointer(self.dmatrix, 0, 0)
             cur = end
             edits = []
@@ -368,7 +362,9 @@ class Levenshtein:
             * Perhaps implement some check or fallback to detect/handle a pointer loop?
         """
         if self.computed:
-            end = MatrixPointer(self.dmatrix, self.dmatrix.n_rows - 1, self.dmatrix.n_cols - 1)
+            end = MatrixPointer(
+                self.dmatrix, self.dmatrix.n_rows - 1, self.dmatrix.n_cols - 1
+            )
             start = MatrixPointer(self.dmatrix, 0, 0)
             cur = end
             costs = []
@@ -394,7 +390,9 @@ class Levenshtein:
             * Perhaps implement some check or fallback to detect/handle a pointer loop?
         """
         if self.computed:
-            end = MatrixPointer(self.dmatrix, self.dmatrix.n_rows - 1, self.dmatrix.n_cols - 1)
+            end = MatrixPointer(
+                self.dmatrix, self.dmatrix.n_rows - 1, self.dmatrix.n_cols - 1
+            )
             start = MatrixPointer(self.dmatrix, 0, 0)
             cur = end
             pointers = []
@@ -420,7 +418,9 @@ class Levenshtein:
             * Perhaps implement some check or fallback to detect/handle a pointer loop?
         """
         if self.computed:
-            end = MatrixPointer(self.dmatrix, self.dmatrix.n_rows - 1, self.dmatrix.n_cols - 1)
+            end = MatrixPointer(
+                self.dmatrix, self.dmatrix.n_rows - 1, self.dmatrix.n_cols - 1
+            )
             start = MatrixPointer(self.dmatrix, 0, 0)
             cur = end
             pointers = []
@@ -441,7 +441,7 @@ class Levenshtein:
         object for `dmatrix`, `pmatrix`, and `ematrix`)."""
         dirmatrix = self.pmatrix.copy()
         dirptr = MatrixPointer(dirmatrix, 0, 0)
-        dirmatrix[0, 0] = Direction.NONE # By definition
+        dirmatrix[0, 0] = Direction.NONE  # By definition
         while dirptr.advance():
             dirmatrix[dirptr] = dirptr.directionto(dirmatrix[dirptr])
         return dirmatrix
@@ -455,38 +455,44 @@ class Levenshtein:
         source = list(map(str, self.source))
         target = list(map(str, self.target))
         if len(source) == 0:
-            source = ['']
+            source = [""]
         if len(target) == 0:
-            target = ['']
+            target = [""]
         costs = self.esequence
         edits = list(map(EdOp.code, self.esequence))
         for i in range(0, len(costs)):
             if costs[i] == EdOp.INSERT:
                 costs[i] = str(self.insert_cost)
-                source.insert(i, '')
+                source.insert(i, "")
             elif costs[i] == EdOp.DELETE:
                 costs[i] = str(self.delete_cost)
-                target.insert(i, '')
+                target.insert(i, "")
             elif costs[i] == EdOp.SUBSTITUTE:
                 costs[i] = str(self.substitute_cost)
-            else: # == EdOp.NONE
-                costs[i] = '0'
+            else:  # == EdOp.NONE
+                costs[i] = "0"
         width: int = 1
-        for sequence in (source, target, costs): # Edits are always width 1
+        for sequence in (source, target, costs):  # Edits are always width 1
             for item in sequence:
                 if len(item) > width:
                     width = len(item)
-        width += 2 # Padding
-        buf: str = ''
-        length = max(
-            len(source),
-            len(target),
-            len(costs),
-            len(edits)
+        width += 2  # Padding
+        buf: str = ""
+        length = max(len(source), len(target), len(costs), len(edits))
+
+        def row(
+            header: str, cells: Sequence, length: int = length, width: int = width
+        ) -> str:
+            return (
+                "|"
+                + header.ljust(8)
+                + "".join(["|" + cells[i].center(width) for i in range(0, len(cells))])
+                + "|\n"
+            )
+
+        divider = (
+            "+--------" + "".join(["+" + "-" * width for i in range(0, length)]) + "+\n"
         )
-        def row(header: str, cells: Sequence, length: int = length, width: int = width) -> str:
-            return "|" + header.ljust(8) + ''.join(["|" + cells[i].center(width) for i in range(0, len(cells))]) + "|\n"
-        divider = "+--------" + ''.join(["+" + "-" * width for i in range(0, length)]) + "+\n"
         buf += divider
         buf += row("Source", source)
         buf += divider
@@ -504,7 +510,7 @@ def levdist(
     target: Sequence,
     insert_cost: Numeric = 1,
     delete_cost: Numeric = 1,
-    substitute_cost: Numeric = 1
+    substitute_cost: Numeric = 1,
 ) -> Numeric:
     """Shortcut to build a Levenshtein object and return numeric Levenshtein distance."""
     ld = Levenshtein(source, target, insert_cost, delete_cost, substitute_cost)

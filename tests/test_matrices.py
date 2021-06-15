@@ -2,8 +2,8 @@ import unittest
 import random
 from transcriptionist.matrices import Matrix, MatrixPointer
 
-class TestMatrices(unittest.TestCase):
 
+class TestMatrices(unittest.TestCase):
     def test_minimum_dimensions(self):
         with self.assertRaises(ValueError):
             m = Matrix(0, 0)
@@ -71,25 +71,25 @@ class TestMatrices(unittest.TestCase):
 
     def test_indeces(self):
         m = Matrix(10, 10)
-        m[0, 0] = 'a'
-        m[0, 9] = 'b'
-        m[9, 0] = 'x'
-        m[9, 9] = 'y'
-        self.assertEqual(m.getitem(0, 0), 'a')
-        self.assertEqual(m.getitem(0, 9), 'b')
-        self.assertEqual(m.getitem(9, 0), 'x')
-        self.assertEqual(m.getitem(9, 9), 'y')
+        m[0, 0] = "a"
+        m[0, 9] = "b"
+        m[9, 0] = "x"
+        m[9, 9] = "y"
+        self.assertEqual(m.getitem(0, 0), "a")
+        self.assertEqual(m.getitem(0, 9), "b")
+        self.assertEqual(m.getitem(9, 0), "x")
+        self.assertEqual(m.getitem(9, 9), "y")
 
     def test_index_wrapping(self):
         m = Matrix(10, 10)
-        m[-10, -10] = 'a'
-        m[-10, -1] = 'b'
-        m[-1, -10] = 'x'
-        m[-1, -1] = 'y'
-        self.assertEqual(m.getitem(0, 0), 'a')
-        self.assertEqual(m.getitem(0, 9), 'b')
-        self.assertEqual(m.getitem(9, 0), 'x')
-        self.assertEqual(m.getitem(9, 9), 'y')
+        m[-10, -10] = "a"
+        m[-10, -1] = "b"
+        m[-1, -10] = "x"
+        m[-1, -1] = "y"
+        self.assertEqual(m.getitem(0, 0), "a")
+        self.assertEqual(m.getitem(0, 9), "b")
+        self.assertEqual(m.getitem(9, 0), "x")
+        self.assertEqual(m.getitem(9, 9), "y")
 
     def test_index_range(self):
         m = Matrix(3, 5)
@@ -140,8 +140,8 @@ class TestMatrices(unittest.TestCase):
         self.assertSequenceEqual(m.getcol(1), [0, 1, 2])
         self.assertSequenceEqual(m.cols[1], [0, 1, 2])
 
-class TestMatrixPointers(unittest.TestCase):
 
+class TestMatrixPointers(unittest.TestCase):
     def test_set_and_get_by_pointer(self):
         value = random.random()
         m = Matrix(20, 20)
@@ -201,5 +201,5 @@ class TestMatrixPointers(unittest.TestCase):
         self.assertNotEqual(p2, (2, 3))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main(verbosity=2)
