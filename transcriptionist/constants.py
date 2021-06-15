@@ -92,6 +92,9 @@ class Direction(Flag):
             Glyph representations are only provided for the predefined flags,
             and not for other potential compound directions such as
             `Direction.NORTH | Direction.SOUTH`.
+
+        Returns:
+            A signle character string representation of the flag.
         """
         mapping = {
             Direction.NORTHEAST: "↗",
