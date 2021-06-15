@@ -59,7 +59,7 @@ class Matrix:
             default_value: The default value with which new cells should be initialised.
             row_labels: An optional sequence of length `rows` to be used as row labels.
             col_labels: An optional sequence of length `cols` to be used as column labels.
-            cell_wdith: The cell width to be used for alignment when the matrix is
+            cell_width: The cell width to be used for alignment when the matrix is
                 represented as a string.
         """
         if not isinstance(rows, int):
@@ -97,7 +97,7 @@ class Matrix:
                 >>> m = Matrix(1, 1, Matrix(1, 1, 0))
                 [[[[0]]]]
                 >>> shallow = m.copy()
-                >>> shallow[0, 0][0, 0] = 1 # Affects the inner matrix in both m and shallow
+                >>> shallow[0, 0][0, 0] = 1 # Affects inner matrix in both m and shallow
                 >>> shallow
                 [[[[1]]]]
                 >>> m
@@ -138,7 +138,7 @@ class Matrix:
 
     @property
     def n_dim(self) -> tuple[int, int]:
-        """A tuple of the dimensions of the matrix in the form `(rows, cols)` (read-only)."""
+        """A tuple of the matrix dimensions in the form `(rows, cols)` (read-only)."""
         return (self.n_rows, self.n_cols)
 
     @property
@@ -176,8 +176,8 @@ class Matrix:
         if length is not self.n_rows:
             raise ValueError(
                 (
-                    f"Row labels must be the same length as number of rows in the matrix. "
-                    f"Length of labels: {length}, number of rows: {self.n_rows}"
+                    f"Row labels must be the same length as number of rows in the matrix."
+                    f" Length of labels: {length}, number of rows: {self.n_rows}"
                 )
             )
         self.__row_labels = row_labels
@@ -205,15 +205,16 @@ class Matrix:
         except TypeError as exc:
             raise TypeError(
                 (
-                    f"Column labels must be a either None or a sequence type with a length, "
-                    f"object of type '{type(col_labels)}' has no len()."
+                    f"Column labels must be a either None or a sequence type with a "
+                    f"length, object of type '{type(col_labels)}' has no len()."
                 )
             ) from exc
         if length is not self.n_cols:
             raise ValueError(
                 (
                     f"Column labels must be the same length as number of columns in the "
-                    f"matrix. Length of labels: {length}, number of columns: {self.n_cols}"
+                    f"matrix. Length of labels: {length}, number of columns: "
+                    f"{self.n_cols}"
                 )
             )
         self.__col_labels = col_labels
@@ -238,8 +239,14 @@ class Matrix:
 
     @property
     def cols(self) -> list:
-        """Provides list access to the matrix's columns, each of which is a list
-        containing row values."""
+        """Provides list access to the matrix's columns.
+
+        Provides list access to the matrix's columns, each of which is a list
+        containing row values.
+
+        Returns:
+            A list containing the matrix's columns.
+        """
         buf = []
         for c in range(0, self.n_cols):
             buf.append(self.getcol(c))
@@ -247,8 +254,14 @@ class Matrix:
 
     @property
     def rows(self) -> list:
-        """Provides list access to the matrix's rows, each of which is a list containing
-        column values."""
+        """Provides list access to the matrix's rows.
+
+        Provides list access to the matrix's rows, each of which is a list containing
+        column values.
+
+        Returns:
+            A list containing the matrix's rows.
+        """
         buf = []
         for r in range(0, self.n_rows):
             buf.append(self.getrow(r))
@@ -282,7 +295,8 @@ class Matrix:
         """Checks if given column index is in range, raises IndexError if not.
 
         Raises:
-            IndexError: Raised if `col` is not inbetween 0 and the number of columns in the matrix.
+            IndexError: Raised if `col` is not inbetween 0 and the number of columns
+                in the matrix.
         """
         if col not in range(0, self.n_cols):
             raise IndexError(
@@ -313,7 +327,7 @@ class Matrix:
         return self.__cells[(row, col)]
 
     @multimethod
-    def getitem(self, ptr: MatrixPointer) -> Any:
+    def getitem(self, ptr: MatrixPointer) -> Any:  # noqa: F811
         """Gets the item at the coordinates identified by the `MatrixPointer`.
 
         Args:
@@ -347,7 +361,7 @@ class Matrix:
         self.__cells[(row, col)] = value
 
     @multimethod
-    def setitem(self, ptr: MatrixPointer, value: Any) -> None:
+    def setitem(self, ptr: MatrixPointer, value: Any) -> None:  # noqa: F811
         """Sets the item at the coordinates identified by the `MatrixPointer` to `value`.
 
         Args:
@@ -445,6 +459,39 @@ class Matrix:
         for i in range(0, self.n_rows):
             self[i, col] = values[i]
 
+    def __mangle_coordinates(
+        self, coords: Coordinate
+    ) -> tuple[Optional[int], Optional[int]]:
+        """Converts any acceptable Coordinates structure into a uniform 2-tuple.
+
+        Returns:
+            A tuple of length two containing the coordinates in the format `(row, col)`.
+
+        Raises:
+            TypeError: Raised if the given key does not match the Coordinate type hint.
+        """
+        if isinstance(coords, MatrixPointer):
+            coords = (coords.r, coords.c)
+        elif isinstance(coords, list):
+            coords = tuple(coords)
+        if (
+            isinstance(coords, tuple)
+            and len(coords) == 2
+            and (
+                isinstance(coords[0], (int, type(None)))
+                or isinstance(coords[1], (int, type(None)))
+            )
+            and not (coords[0] is None and coords[1] is None)
+        ):
+            return coords
+        raise ValueError(
+            (
+                "The supplied coordinate must be either a valid MatrixPointer, or match"
+                "tuple[int, int] or list[int, int], where at most one occurence of int"
+                "may be supplanted by None."
+            )
+        )
+
     def __getitem__(self, key: Coordinate) -> Any:
         """Gets item at coordinates `row` and `col`.
 
@@ -457,35 +504,16 @@ class Matrix:
 
         Raises:
             IndexError: Raised if either or both of the column or row indeces are out of
-                range of the matrix's dimensions, or if both indeces are specified as
-                `None`.
+                range of the matrix's dimensions.
             TypeError: Raised if the given key does not match the Coordinate type hint.
         """
-        if isinstance(key, MatrixPointer):
-            key = (key.r, key.c)
-        if isinstance(key, list):
-            key = tuple(key)
-        if (
-            isinstance(key, tuple)
-            and len(key) == 2
-            and isinstance(key[0], (int, type(None)))
-            and isinstance(key[1], (int, type(None)))
-        ):
-            row, col = key
-            if row is not None and col is not None:
-                return self.getitem(row, col)
-            if row is not None and col is None:
-                return self.getrow(row)
-            if row is None and col is not None:
-                return self.getcol(col)
-            if row is None and col is None:
-                raise IndexError(
-                    (
-                        "At least one index value (row, col) must be supplied, "
-                        "(None, None) given."
-                    )
-                )
-        raise TypeError("Key must be either of type tuple[int, int] or list[int, int].")
+        row, col = self.__mangle_coordinates(key)
+        if row is not None and col is not None:
+            return self.getitem(row, col)
+        if row is not None and col is None:
+            return self.getrow(row)
+        if row is None and col is not None:
+            return self.getcol(col)
 
     def __setitem__(self, key: Coordinate, value: Union[Any, Sequence]):
         """Sets item at coordinates `row` and `col` to value.
@@ -500,39 +528,24 @@ class Matrix:
 
         Raises:
             IndexError: Raised if either or both of the column or row indeces are out of
-                range of the matrix's dimensions, or if both indeces are specified as
-                `None`.
+                range of the matrix's dimensions.
             TypeError: Raised if the given key does not match the Coordinate type hint.
         """
-        if isinstance(key, MatrixPointer):
-            key = (key.r, key.c)
-        if isinstance(key, list):
-            key = tuple(key)
-        if (
-            isinstance(key, tuple)
-            and len(key) == 2
-            and isinstance(key[0], (int, type(None)))
-            and isinstance(key[1], (int, type(None)))
-        ):
-            row, col = key
-            if row is not None and col is not None:
-                return self.setitem(row, col, value)
-            if row is not None and col is None:
-                return self.setrow(row, value)
-            if row is None and col is not None:
-                return self.setcol(col, value)
-            if row is None and col is None:
-                raise IndexError(
-                    (
-                        "At least one index value (row, col) must be supplied, "
-                        "(None, None) given."
-                    )
-                )
-        raise TypeError("Key must be either of type tuple[int, int] or list[int, int].")
+        row, col = self.__mangle_coordinates(key)
+        if row is not None and col is not None:
+            return self.setitem(row, col, value)
+        if row is not None and col is None:
+            return self.setrow(row, value)
+        if row is None and col is not None:
+            return self.setcol(col, value)
 
     def __bool__(self) -> bool:
-        """Returns False if all the cells of the matrix are identical to `default_value`,
-        True otherwise."""
+        """Converts matrix to bool.
+
+        Returns:
+            False if all the cells of the matrix are identical to `default_value`,
+            True otherwise.
+        """
         for r in range(0, self.n_rows):
             for c in range(0, self.n_cols):
                 if self.__cells[(r, c)] is not self.default_value:
