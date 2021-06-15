@@ -9,6 +9,9 @@ __pycache__/*
 /build/
 /dist/
 
+# Tox environment
+.tox/*
+
 # Python egg metadata, generated from source files by setuptools
 /*.egg-info
 
