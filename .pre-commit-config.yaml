@@ -18,3 +18,11 @@ repos:
   rev: 21.6b0
   hooks:
     - id: black
+- repo: local
+  hooks:
+    - id: pytest
+      name: pytest
+      entry: pytest
+      language: system
+      pass_filenames: false
+      always_run: true
