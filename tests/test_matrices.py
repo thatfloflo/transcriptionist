@@ -1,22 +1,29 @@
+"""Unit tests for the `matrices` submodule of the `transcriptionist` package."""
 import unittest
 import random
+from ast import literal_eval
 from transcriptionist.matrices import Matrix, MatrixPointer
 
 
 class TestMatrices(unittest.TestCase):
+    """Unit tests for the `transcriptionist.matrices.Matrix` class."""
+
     def test_minimum_dimensions(self):
+        """Checks that we cannot construct matrices smaller than 1x1."""
         with self.assertRaises(ValueError):
-            m = Matrix(0, 0)
+            Matrix(0, 0)
 
     def test_dimension_attributes(self):
-        rows = random.randint(1, 20)
-        cols = random.randint(1, 20)
+        """Checks that the dimension attributes reflect matrix dimensions."""
+        rows = random.randint(1, 20)  # noqa: S311
+        cols = random.randint(1, 20)  # noqa: S311
         m = Matrix(rows, cols)
         self.assertEqual(m.n_dim, (rows, cols))
         self.assertEqual(m.n_rows, rows)
         self.assertEqual(m.n_cols, cols)
 
     def test_dimension_attribute_protection(self):
+        """Ensures that the dimension attributes of a matrix cannot be overwritten."""
         m = Matrix(1, 1)
         with self.assertRaises(AttributeError):
             m.n_dim = (10, 20)
@@ -26,16 +33,18 @@ class TestMatrices(unittest.TestCase):
             m.n_cols = 10
 
     def test_default_values(self):
-        value = random.random()
+        """Checks that all cells are initialised with the specified default value."""
+        value = random.random()  # noqa: S311
         m = Matrix(2, 2, default_value=value)
         for r in range(0, m.n_rows):
             for c in range(0, m.n_cols):
                 self.assertEqual(m[r, c], value)
 
     def test_set_and_get_items(self):
-        row = random.randrange(1, 20, 1)
-        col = random.randrange(1, 20, 1)
-        value = random.random()
+        """Tests the setting and getting of individual cell values."""
+        row = random.randrange(1, 20, 1)  # noqa: S311
+        col = random.randrange(1, 20, 1)  # noqa: S311
+        value = random.random()  # noqa: S311
         m = Matrix(20, 20)
         m[row, col] = value
         self.assertEqual(m[row, col], value)
@@ -44,8 +53,9 @@ class TestMatrices(unittest.TestCase):
         self.assertEqual(m.getitem(row, col), value)
 
     def test_set_and_get_rows(self):
-        row = random.randrange(1, 20, 1)
-        values = [random.random() for x in range(0, 20)]
+        """Tests the setting and getting of entire matrix rows."""
+        row = random.randrange(1, 20, 1)  # noqa: S311
+        values = [random.random() for x in range(0, 20)]  # noqa: S311
         m = Matrix(20, 20)
         m[row, None] = values
         self.assertEqual(m[row, None], values)
@@ -54,8 +64,9 @@ class TestMatrices(unittest.TestCase):
         self.assertEqual(m.getrow(row), values)
 
     def test_set_and_get_columns(self):
-        col = random.randrange(1, 20, 1)
-        values = [random.random() for x in range(0, 20)]
+        """Tests the setting and getting of entire matrix columns."""
+        col = random.randrange(1, 20, 1)  # noqa: S311
+        values = [random.random() for x in range(0, 20)]  # noqa: S311
         m = Matrix(20, 20)
         m[None, col] = values
         self.assertEqual(m[None, col], values)
@@ -64,12 +75,14 @@ class TestMatrices(unittest.TestCase):
         self.assertEqual(m.getcol(col), values)
 
     def test_boolification(self):
+        """Tests the correct coversion of matrices to booleans."""
         m = Matrix(5, 5)
         self.assertFalse(bool(m))
-        m[1, 1] = random.random()
+        m[1, 1] = random.random()  # noqa: S311
         self.assertTrue(bool(m))
 
     def test_indeces(self):
+        """Tests that indeces assign to the correct row and column."""
         m = Matrix(10, 10)
         m[0, 0] = "a"
         m[0, 9] = "b"
@@ -81,6 +94,7 @@ class TestMatrices(unittest.TestCase):
         self.assertEqual(m.getitem(9, 9), "y")
 
     def test_index_wrapping(self):
+        """Tests that negative indeces are wrapped around correctly."""
         m = Matrix(10, 10)
         m[-10, -10] = "a"
         m[-10, -1] = "b"
@@ -92,6 +106,7 @@ class TestMatrices(unittest.TestCase):
         self.assertEqual(m.getitem(9, 9), "y")
 
     def test_index_range(self):
+        """Tests raising of IndexError if exceeding matrix indices."""
         m = Matrix(3, 5)
         with self.assertRaises(IndexError):
             m[-10, 2]
@@ -103,15 +118,18 @@ class TestMatrices(unittest.TestCase):
             m[2, 6]
 
     def test_repr(self):
-        value = random.random()
+        """Tests that matrix cells survive reconstruction from repr()."""
+        value = random.random()  # noqa: S311
         m = Matrix(3, 3)
-        m[2, 2] = value
+        m[2, 1] = value
         n = []
         out = repr(m)
-        n = eval(out)
-        self.assertEqual(m[2, 2], n[2][2])
+        n = literal_eval(out)
+        self.assertEqual(m[2, 1], n[2][1])
+        self.assertEqual(n[2][1], value)
 
     def test_listification(self):
+        """Ensures that list and row access properties are consistently of type `list`."""
         m = Matrix(3, 3)
         rows = m.rows
         self.assertIsInstance(rows, list)
@@ -123,6 +141,7 @@ class TestMatrices(unittest.TestCase):
             self.assertIsInstance(item, list)
 
     def test_row_access(self):
+        """Tests correct position of cells via list-of-row access method."""
         m = Matrix(3, 3)
         m[1, 0] = 0
         m[1, 1] = 1
@@ -132,6 +151,7 @@ class TestMatrices(unittest.TestCase):
         self.assertSequenceEqual(m.rows[1], [0, 1, 2])
 
     def test_col_access(self):
+        """Tests correct position of cells via list-of-columns access method."""
         m = Matrix(3, 3)
         m[0, 1] = 0
         m[1, 1] = 1
@@ -142,24 +162,28 @@ class TestMatrices(unittest.TestCase):
 
 
 class TestMatrixPointers(unittest.TestCase):
+    """Unit tests for the `transcriptionist.matrices.MatrixPointer` class."""
+
     def test_set_and_get_by_pointer(self):
-        value = random.random()
+        """Checks addressing of specific `Matrix` cells by `MatrixPointer`."""
+        value = random.random()  # noqa: S311
         m = Matrix(20, 20)
         p = MatrixPointer(m)
-        p.r = random.randrange(1, 20, 1)
-        p.c = random.randrange(1, 20, 1)
+        p.r = random.randrange(1, 20, 1)  # noqa: S311
+        p.c = random.randrange(1, 20, 1)  # noqa: S311
         m[p] = value
         self.assertEqual(m[p], value)
         self.assertEqual(m[p.r, p.c], value)
         m = Matrix(20, 20)
         p = MatrixPointer(m)
-        p.r = random.randrange(1, 20, 1)
-        p.c = random.randrange(1, 20, 1)
+        p.r = random.randrange(1, 20, 1)  # noqa: S311
+        p.c = random.randrange(1, 20, 1)  # noqa: S311
         m.setitem(p, value)
         self.assertEqual(m.getitem(p), value)
         self.assertEqual(m.getitem(p.r, p.c), value)
 
-    def test_pointer_defaults(self):
+    def test_pointer_default_coordinates(self):
+        """Checks that `MatrixPointer` is initialised with correct default coordinates."""
         m = Matrix(5, 5)
         p = MatrixPointer(m)
         self.assertEqual(p[0], 0)
@@ -173,6 +197,7 @@ class TestMatrixPointers(unittest.TestCase):
         self.assertEqual(p.c, 3)
 
     def test_pointer_range(self):
+        """Checks that pointer cannot be set out of the range of the associated matrix."""
         m = Matrix(5, 2)
         with self.assertRaises(ValueError):
             p = MatrixPointer(m, 5, 1)
@@ -189,6 +214,7 @@ class TestMatrixPointers(unittest.TestCase):
             p[1] = 2
 
     def test_pointer_equality(self):
+        """Ensures pointers with same coordinates but different matrices compare True."""
         m = Matrix(5, 5)
         p1 = MatrixPointer(m, 2, 3)
         p2 = MatrixPointer(m, 2, 3)

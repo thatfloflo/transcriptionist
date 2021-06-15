@@ -1,11 +1,13 @@
+"""Unit tests for the `levenshtein` submodule of `transcriptionist`."""
 import unittest
-import random
-from transcriptionist.levenshtein import Levenshtein, levdist
-from transcriptionist.constants import EditOperation, Direction
+from transcriptionist.levenshtein import Levenshtein
 
 
 class TestLevenshtein(unittest.TestCase):
+    """Unit tests for the `transcriptionist.levenshtein.Levenshtein` class."""
+
     def test_levenshtein_unweighted(self):
+        """Checks the edit distances for some strings with default weightings."""
         unweighted = {
             ("sitten", "kitten"): 1,  # subsitute s->k
             ("sitten", "kittens"): 2,  # subsitute s->k, delete or insert final s

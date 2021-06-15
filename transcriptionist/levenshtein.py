@@ -6,7 +6,8 @@ object representation allows for stepwise computation and inspection of the dist
 matrix, and the specific implementation allows the assignment of custom costs for the
 three operations permitted by Levenshtein distance: insertion, deletion, and substitution.
 A shortcut function `levdist` is provided to directly get the levenshtein distance
-between two sequences without having to construct and compute a `Levenshtein` object first.
+between two sequences without having to construct and compute a `Levenshtein` object
+first.
 
 Example::
 
@@ -40,8 +41,7 @@ Numeric = Union[int, float]
 
 
 class Levenshtein:
-    """An object-oriented implementation of the Wagner-Fischer algorithm for the
-    Levenshtein distance.
+    """An OOP implementation of the Wagner-Fischer algorithm for the Levenshtein distance.
 
     Attributes:
         insert_cost: The cost of insert operations on the sequence.
@@ -78,7 +78,7 @@ class Levenshtein:
             target: The target sequence that source is edited to match.
             insert_cost: The cost of insert operations on the sequence.
             delete_cost: The cost of delete operations on the sequence.
-            subsitute_cost: The cost of substitute operations on the sequence.
+            substitute_cost: The cost of substitute operations on the sequence.
         """
         self.__source = source
         self.__target = target
@@ -91,8 +91,10 @@ class Levenshtein:
         self.__ptr = MatrixPointer(self.dmatrix)
 
     def initialise_matrix(self) -> Matrix:
-        """Initialises an empty `Matrix` with correct dimensions and labels based on the
-        `source` and `target` sequences.
+        """Initialises an empty `Matrix` with appropriate dimensions and labels.
+
+        Returns:
+            A new `Matrix` object with appropriate dimensions and labels.
         """
         return Matrix(
             len(self.source) + 1,
@@ -136,7 +138,7 @@ class Levenshtein:
         self.pmatrix[self.ptr] = pvalue
         self.ematrix[self.ptr] = evalue
 
-    def calculate(self) -> None:
+    def calculate(self) -> None:  # noqa: C901
         """Calculates the Levenshtein distance for the current cell.
 
         This method will apply the Wagner-Fischer algorithm to calculate the Levenshtein
@@ -171,10 +173,6 @@ class Levenshtein:
                 EdOp.DELETE,
             )
             return
-        # Get values for surrounding three cells
-        vup = self.dmatrix[self.ptr.cup()]
-        vleft = self.dmatrix[self.ptr.cleft()]
-        vupleft = self.dmatrix[self.ptr.cupleft()]
         # Substituting like for like should be free
         if self.dmatrix.row_labels[self.ptr.r] == self.dmatrix.col_labels[self.ptr.c]:
             substitute_cost = 0
@@ -224,20 +222,25 @@ class Levenshtein:
         return True
 
     def compute(self) -> None:
-        """Computes the remainder of the matrix from the current pointer position up to
-        and including the last cell in the matrix."""
+        """Computes the remainder of the matrix from the current pointer position.
+
+        Computes the remaining cells of the matrix, beginning from the current pointer
+        position and going up to and including the last cell in the matrix.
+        """
         while self.step():
             pass
         self.computed = True
 
     @property
     def ptr(self) -> MatrixPointer:
-        """A `MatrixPointer` pointing to the current cell in `dmatrix`. This is also
-        used to refer to the position in `pmatrix` and `ematrix`.
+        """A `MatrixPointer` pointing to the current cell in `dmatrix`.
+
+        This is also used to refer to the position in `pmatrix` and `ematrix`.
 
         While the `ptr` property is read-only (i.e. you cannot assign a different
         `MatrixPointer` object to it), the pointer position can be manipulated via the
-        methods of the `MatrixPointer` object itself if that is desired."""
+        methods of the `MatrixPointer` object itself if that is desired.
+        """
         return self.__ptr
 
     @property
@@ -262,7 +265,9 @@ class Levenshtein:
 
     @property
     def dmatrix(self) -> Matrix:
-        """The distance matrix containing the edit cost of the subproblems in each cell
+        """The distance matrix containing edit costs.
+
+        The distance matrix contains the edit cost of the subproblems in each cell
         according to the Wagner-Fischer algorithm.
 
         While the `dmatrix` property is read-only (i.e. you cannot assign a different
@@ -280,16 +285,18 @@ class Levenshtein:
 
     @property
     def pmatrix(self) -> Matrix:
-        """The pointer matrix containing `MatrixPointer`s pointing to the cell of origin
+        """The pointer matrix containing pointers to the cell of origin.
+
+        The pointer matrix contains `MatrixPointer`s pointing to the cell of origin
         based on which a cell's edit cost was calculated according to the Wagner-Fischer
         algorithm.
 
-        While the `dmatrix` property is read-only (i.e. you cannot assign a different
+        While the `ematrix` property is read-only (i.e. you cannot assign a different
         `Matrix` object to it), the matrix itself can be manipulated via the normal
         methods available for `Matrix` objects if this is desired.
 
         Note:
-            If the distance matrix is manipulated manually, the user is responsible for
+            If the pointer matrix is manipulated manually, the user is responsible for
             ensuring that it continues to fit the dimensions of the `source` and `target`
             sequences and that the properties of `dmatrix`, `pmatrix`, and `ematrix`
             remain identical. If the three matrices are resized to different dimensions
@@ -299,14 +306,17 @@ class Levenshtein:
 
     @property
     def ematrix(self) -> Matrix:
-        """The distance matrix containing the edit cost of the subproblems in each cell
-        according to the Wagner-Fischer algorithm. While the `dmatrix` property is
-        read-only (i.e. you cannot assign a different `Matrix` object to it), the matrix
-        itself can be manipulated via the normal methods available for `Matrix` objects
-        if this is desired.
+        """The edit matrix containing the edit operations taking place.
+
+        The edit matrix contains the edit operations of the subproblems in each cell
+        according to the Wagner-Fischer algorithm.
+
+        While the `ematrix` property is read-only (i.e. you cannot assign a different
+        `Matrix` object to it), the matrix itself can be manipulated via the normal
+        methods available for `Matrix` objects if this is desired.
 
         Note:
-            If the distance matrix is manipulated manually, the user is responsible for
+            If the edit matrix is manipulated manually, the user is responsible for
             ensuring that it continues to fit the dimensions of the `source` and `target`
             sequences and that the properties of `dmatrix`, `pmatrix`, and `ematrix`
             remain identical. If the three matrices are resized to different dimensions
@@ -316,17 +326,23 @@ class Levenshtein:
 
     @property
     def distance(self) -> Optional[Numeric]:
-        """The numeric Levenshtein distance between `source` and `target`. None if the
-        full distance has not been computed yet as indicated by `computed`."""
+        """The numeric Levenshtein distance between `source` and `target`.
+
+        Returns:
+            The Levenshtein distance between `source` and `target`, or None if the full
+            distance has not been computed yet as indicated by `computed`.
+        """
         if self.computed:
             return self.dmatrix[self.dmatrix.n_rows - 1, self.dmatrix.n_cols - 1]
         return None
 
     @property
     def esequence(self) -> Optional[list[EdOp]]:
-        """The sequence of edits to get from `source` to `target` in the form of a list of
-        `EditOperation` flags. None if the full edit sequence has not been computed yet
-        as indicated by `computed`.
+        """The sequence of edits to get from `source` to `target`.
+
+        Contains the sequence of edits to get from `source` to `target` in the form of a
+        list of `EditOperation` flags. None if the full edit sequence has not been
+        computed yet as indicated by `computed`.
 
         Todo:
             * Implement checks in loop to handle (1) incomplete paths (e.g. `computed` has
@@ -351,9 +367,11 @@ class Levenshtein:
 
     @property
     def dsequence(self) -> Optional[list[Numeric]]:
-        """The sequence of individual operation costs to get from `source` to `target` in
-        the form of a list of numeric values. Aligns with `esequence`. None if the full
-        edit sequence has not been computed yet as indicated by `computed`.
+        """The sequence of individual operation costs to get from `source` to `target`.
+
+        Contains the sequence of individual operation costs to get from `source` to
+        `target` in the form of a list of numeric values. Aligns with `esequence`. None
+        if the full edit sequence has not been computed yet as indicated by `computed`.
 
         Todo:
             * Implement checks in loop to handle (1) incomplete paths (e.g. `computed` has
@@ -378,10 +396,12 @@ class Levenshtein:
 
     @property
     def psequence(self) -> Optional[list[MatrixPointer]]:
-        """The sequence of pointers to the prior sub-prefix of edit operations to get from
-        `source` to `target` in the form of a list of `MatrixPointer` objects. Aligns with
-        `esequence`. None if the full edit sequence has not been computed yet as indicated
-        by `computed`.
+        """The sequence of pointers to the prior sub-prefix of edit operations.
+
+        Contains the sequence of pointers to the prior sub-prefix of edit operations to
+        get from `source` to `target` in the form of a list of `MatrixPointer` objects.
+        Aligns with `esequence`. None if the full edit sequence has not been computed yet
+        as indicated by `computed`.
 
         Todo:
             * Implement checks in loop to handle (1) incomplete paths (e.g. `computed` has
@@ -406,10 +426,12 @@ class Levenshtein:
 
     @property
     def dirsequence(self) -> Optional[list[Direction]]:
-        """A sequence of cardinal directions to the cell of the prior sub-prefix of edit
-        operations to get from `source` to `target` in the form of a list of `Direction`
-        flags. Aligns with `esequence`. None if the full edit sequence has not been
-        computed yet as indicated by `computed`.
+        """The reverse sequence of directions of operations in the distance calculation.
+
+        Contains a sequence of cardinal directions to the cell of the prior sub-prefix of
+        edit operations to get from `source` to `target` in the form of a list of
+        `Direction` flags. Aligns with `esequence`. None if the full edit sequence has not
+        been computed yet as indicated by `computed`.
 
         Todo:
             * Implement checks in loop to handle (1) incomplete paths (e.g. `computed` has
@@ -434,11 +456,14 @@ class Levenshtein:
 
     @property
     def dirmatrix(self) -> Matrix:
-        """A matrix of cardinal directions pointing to the cell of the prior sub-prefix
-        of edit operations based on which each cell was computed. Generated dynamically
-        so any manipulations of `dirmatrix` based on the methods of the `Matrix` object
-        returned will not have a permanent effect (unlike manipulations of the `Matrix`
-        object for `dmatrix`, `pmatrix`, and `ematrix`)."""
+        """A matrix showing the path of traversal in calculating the edit distance.
+
+        Contains a matrix of cardinal directions pointing to the cell of the prior
+        sub-prefix of edit operations based on which each cell was computed. Generated
+        dynamically so any manipulations of `dirmatrix` based on the methods of the
+        `Matrix` object returned will not have a permanent effect (unlike manipulations of
+        the `Matrix` object for `dmatrix`, `pmatrix`, and `ematrix`).
+        """
         dirmatrix = self.pmatrix.copy()
         dirptr = MatrixPointer(dirmatrix, 0, 0)
         dirmatrix[0, 0] = Direction.NONE  # By definition
@@ -446,10 +471,11 @@ class Levenshtein:
             dirmatrix[dirptr] = dirptr.directionto(dirmatrix[dirptr])
         return dirmatrix
 
-    def visualise(self) -> str:
+    def visualise(self) -> str:  # noqa: C901
         """Returns a text-based visualisation of the edit distance and its derivation.
 
-        If the matrix has not been fully computed yet, it will be computed first."""
+        If the matrix has not been fully computed yet, it will be computed first.
+        """
         if not self.computed:
             self.compute()
         source = list(map(str, self.source))
