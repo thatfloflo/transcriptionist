@@ -264,10 +264,7 @@ class Matrix:
         Returns:
             A list containing the matrix's rows.
         """
-        buf = []
-        for r in range(0, self.n_rows):
-            buf.append(self.getrow(r))
-        return buf
+        return self.__data
 
     def __wrap_row(self, row: int) -> int:
         """Wraps a negative row index back by substracting from n_rows."""
@@ -387,10 +384,7 @@ class Matrix:
         """
         row = self.__wrap_row(row)
         self.__validate_row_index(row)
-        buf = []
-        for col in range(0, self.n_cols):
-            buf.append(self[row, col])
-        return buf
+        return self.__data[row]
 
     def setrow(self, row: int, values: Sequence):
         """Sets the column values of a specified row to the items of a given sequence.
@@ -415,8 +409,7 @@ class Matrix:
                     "matrix columns."
                 )
             )
-        for i in range(0, self.n_cols):
-            self[row, i] = values[i]
+        self.__data[row] = list(values)
 
     def getcol(self, col: int) -> list:
         """Gets column at specified index and returns a list of row values.
