@@ -30,7 +30,7 @@ class Matrix:
     """
 
     default_value: Any
-    __cells: dict[tuple[int, int], Any]
+    __data: list[list[Any]]
     __n_rows: int
     __n_cols: int
     __row_labels: Optional[Sequence]
@@ -71,12 +71,14 @@ class Matrix:
                 f"Matrix dimensions must be at least 1x1, {rows}x{cols} specified."
             )
         self.default_value = default_value
-        self.__cells = {}
         self.__n_rows = rows
         self.__n_cols = cols
-        for r in range(0, self.n_rows):
-            for c in range(0, self.n_cols):
-                self.__cells[(r, c)] = self.default_value
+        self.__data = []
+        for _r in range(0, self.n_rows):
+            data_row = []
+            for _c in range(0, self.n_cols):
+                data_row.append(self.default_value)
+            self.__data.append(data_row)
         self.row_labels = row_labels
         self.col_labels = col_labels
         self.cell_width = cell_width
@@ -324,7 +326,7 @@ class Matrix:
         self.__validate_row_index(row)
         col = self.__wrap_col(col)
         self.__validate_col_index(col)
-        return self.__cells[(row, col)]
+        return self.__data[row][col]
 
     @multimethod
     def getitem(self, ptr: MatrixPointer) -> Any:  # noqa: F811
@@ -358,7 +360,7 @@ class Matrix:
         self.__validate_row_index(row)
         col = self.__wrap_col(col)
         self.__validate_col_index(col)
-        self.__cells[(row, col)] = value
+        self.__data[row][col] = value
 
     @multimethod
     def setitem(self, ptr: MatrixPointer, value: Any) -> None:  # noqa: F811
@@ -548,7 +550,7 @@ class Matrix:
         """
         for r in range(0, self.n_rows):
             for c in range(0, self.n_cols):
-                if self.__cells[(r, c)] is not self.default_value:
+                if self[r, c] is not self.default_value:
                     return True
         return False
 
