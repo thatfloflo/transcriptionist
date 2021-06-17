@@ -160,6 +160,126 @@ class TestMatrices(unittest.TestCase):
         self.assertSequenceEqual(m.getcol(1), [0, 1, 2])
         self.assertSequenceEqual(m.cols[1], [0, 1, 2])
 
+    def test_row_insertion_dimensions(self):
+        """Tests correctness of dimensions after inserting new rows."""
+        m = Matrix(3, 3)
+        self.assertEqual(m.n_rows, 3)
+        m.insert_row(0)
+        self.assertEqual(m.n_rows, 4)
+        m.insert_row(2)
+        self.assertEqual(m.n_rows, 5)
+        m.append_row()
+        self.assertEqual(m.n_rows, 6)
+        # Check that correct row counts are also reflected in other relevant places
+        self.assertEqual(len(m.rows), m.n_rows)
+        self.assertEqual(m.n_dim, (6, 3))
+
+    def test_column_insertion_dimensions(self):
+        """Tests correctness of dimensions after inserting new columns."""
+        m = Matrix(3, 3)
+        self.assertEqual(m.n_cols, 3)
+        m.insert_col(0)
+        self.assertEqual(m.n_cols, 4)
+        m.insert_col(2)
+        self.assertEqual(m.n_cols, 5)
+        m.append_col()
+        self.assertEqual(m.n_cols, 6)
+        # Check that correct column counts are also reflected in other relevant places
+        self.assertEqual(len(m.cols), m.n_cols)
+        self.assertEqual(m.n_dim, (3, 6))
+
+    def test_insert_row_data(self):
+        """Tests that newly inserted rows are initialised with the correct values."""
+        # Default values
+        m = Matrix(2, 2)
+        m.setrow(0, [1, 1])
+        m.setrow(1, [1, 1])
+        m.insert_row(1)
+        self.assertEqual(m.getrow(1), [None, None])
+        # Changing default values before insertion
+        m = Matrix(2, 2, default_value=1)
+        m.default_value = 0
+        m.insert_row(1)
+        self.assertEqual(m.getrow(1), [0, 0])
+        # Supplied values
+        m = Matrix(2, 2)
+        m.insert_row(1, [1, 2])
+        self.assertEqual(m.getrow(1), [1, 2])
+
+    def test_insert_column_data(self):
+        """Tests that newly inserted columns are initialised with the correct values."""
+        # Default values
+        m = Matrix(2, 2)
+        m.setcol(0, [1, 1])
+        m.setcol(1, [1, 1])
+        m.insert_col(1)
+        self.assertEqual(m.getcol(1), [None, None])
+        # Changing default values before insertion
+        m = Matrix(2, 2, default_value=1)
+        m.default_value = 0
+        m.insert_col(1)
+        self.assertEqual(m.getcol(1), [0, 0])
+        # Supplied values
+        m = Matrix(2, 2)
+        m.insert_col(1, [1, 2])
+        self.assertEqual(m.getcol(1), [1, 2])
+
+    def test_insert_row_value_validity(self):  # noqa: C901
+        """Tests that `insert_row()` accepts only valid value sequences as argument."""
+        m = Matrix(3, 3)
+        valid = ([1, 2, 3], "abc", (4, 5, 6), {7, 8, 9})
+        too_short = ([1, 2], "ab", (3, 4), {7, 8})
+        too_long = ([1, 2, 3, 4], "abcd", (3, 4, 5, 6), {7, 8, 9, 10})
+        non_seq = (123, False, str)
+        for item in valid:
+            try:
+                m.append_row(item)
+            except ValueError:
+                self.fail("append_row() raised ValueError when given valid arguments.")
+        for item in too_long:
+            with self.assertRaises(
+                ValueError, msg=f"Too-long item: {item} should raise ValueError."
+            ):
+                m.append_row(item)
+        for item in too_short:
+            with self.assertRaises(
+                ValueError, msg=f"Too-short item: {item} should raise ValueError."
+            ):
+                m.append_row(item)
+        for item in non_seq:
+            with self.assertRaises(
+                TypeError, msg=f"Non-sequence item: {item} should raise TypeError."
+            ):
+                m.append_row(item)
+
+    def test_insert_column_value_validity(self):  # noqa: C901
+        """Tests that `insert_row()` accepts only valid value sequences as argument."""
+        m = Matrix(3, 3)
+        valid = ([1, 2, 3], "abc", (4, 5, 6), {7, 8, 9})
+        too_short = ([1, 2], "ab", (3, 4), {7, 8})
+        too_long = ([1, 2, 3, 4], "abcd", (3, 4, 5, 6), {7, 8, 9, 10})
+        non_seq = (123, False, str)
+        for item in valid:
+            try:
+                m.append_col(item)
+            except ValueError:
+                self.fail("append_col() raised ValueError when given valid arguments.")
+        for item in too_long:
+            with self.assertRaises(
+                ValueError, msg=f"Too-long item: {item} should raise ValueError."
+            ):
+                m.append_col(item)
+        for item in too_short:
+            with self.assertRaises(
+                ValueError, msg=f"Too-short item: {item} should raise ValueError."
+            ):
+                m.append_col(item)
+        for item in non_seq:
+            with self.assertRaises(
+                TypeError, msg=f"Non-sequence item: {item} should raise TypeError."
+            ):
+                m.append_col(item)
+
 
 class TestMatrixPointers(unittest.TestCase):
     """Unit tests for the `transcriptionist.matrices.MatrixPointer` class."""

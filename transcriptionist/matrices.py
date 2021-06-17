@@ -534,6 +534,87 @@ class Matrix:
         if row is None and col is not None:
             return self.setcol(col, value)
 
+    def insert_col(self, col: int, values: Optional[Sequence] = None) -> None:
+        """Inserts a column into the matrix at a specified position.
+
+        Inserts a new matrix column before the column specified by the index `col`.
+        The new column is initialised with the sequene of values in `values` if specified,
+        otherwise it is initialised with the matrix's `default_value`.
+
+        Raises:
+            ValueError: Raised if `len(values)` does not match the matrix's `n_rows`
+            property.
+        """
+        if values is None:
+            values = [self.default_value for _ in range(0, self.n_rows)]
+        else:
+            values = list(values)
+            if len(values) != self.n_rows:
+                raise ValueError(
+                    (
+                        "The supplied sequence of values much match the matrix's number "
+                        " of rows in length."
+                    )
+                )
+        for r in range(0, self.n_rows):
+            self.__data[r].insert(col, values[r])
+        self.__n_cols += 1
+
+    def append_col(self, values: Optional[Sequence] = None) -> None:
+        """Appends a new column at the end of the matrix.
+
+        Appends a new column at the end of the matrix. The new column is initialised with
+        the sequence in `values` if specified, otherwise it is initialised with the
+        matrix's `default_value`.
+
+        `m.append_col(v)` is equivalent to `m.insert_col(m.n_cols, v)`.
+
+        Raises:
+            ValueError: Raised if `len(values)` does not match the matrix's `n_rows`
+            property.
+        """
+        self.insert_col(self.n_cols, values)
+
+    def insert_row(self, row: int, values: Optional[Sequence] = None) -> None:
+        """Inserts a row into the matrix at a specified position.
+
+        Inserts a new matrix row before the row specified by the index `row`. The
+        new row is initialised with the sequence in `values` if specified, otherwise
+        it is initialised with the matrix's `default_value`.
+
+        Raises:
+            ValueError: Raised if `len(values)` does not match the matrix's `n_cols`
+            property.
+        """
+        if values is None:
+            values = [self.default_value for _ in range(0, self.n_cols)]
+        else:
+            values = list(values)
+            if len(values) != self.n_cols:
+                raise ValueError(
+                    (
+                        "The supplied sequence of values much match the matrix's number "
+                        "of columns in length."
+                    )
+                )
+        self.__data.insert(row, values)
+        self.__n_rows += 1
+
+    def append_row(self, values: Optional[Sequence] = None) -> None:
+        """Appends a new row at the end of the matrix.
+
+        Appends a new row at the end of the matrix. The new row is initialised with
+        the sequence in `values` if specified, otherwise it is initialised with the
+        matrix's `default_value`.
+
+        `m.append_row(v)` is equivalent to `m.insert_row(m.n_rows, v)`.
+
+        Raises:
+            ValueError: Raised if `len(values)` does not match the matrix's `n_cols`
+            property.
+        """
+        self.insert_row(self.n_rows, values)
+
     def __bool__(self) -> bool:
         """Converts matrix to bool.
 
