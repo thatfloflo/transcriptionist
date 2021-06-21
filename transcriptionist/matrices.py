@@ -148,6 +148,10 @@ class Matrix:
         """The total number of cells in the matrix."""
         return self.n_rows * self.n_cols
 
+    def __len__(self) -> int:
+        """Returns the total number of cells in the matrix."""
+        return self.size
+
     @property
     def row_labels(self) -> Optional[Sequence]:
         """The labels used for the rows.
@@ -1253,7 +1257,7 @@ class MatrixIterator:
         The iterator walks through the matrix row by row, walking through each row column
         by column (i.e. a 2x2 matrix is walked through as (0,0) -> (0,1) -> (1,0) ->
         (1,1). Calling next() on a MatrixIterator normally returns the value of the cell,
-        unless the MatrixIterator was instantiated with `pointers=True`, in which case
+        unless the MatrixIterator was instantiated with `enumeration=True`, in which case
         it will return a tuple with a pointer to the current cell as the first element,
         and its value as the second element.
 
