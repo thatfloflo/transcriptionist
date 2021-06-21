@@ -95,23 +95,6 @@ class TargetSegment:
         """
         return f"({str(self.target)}, {str(self.score)})"
 
-    def __hash__(self) -> int:
-        """Returns a hash based on the target and it's score.
-
-        Returns:
-            The hash of combining the target and score in a tuple.
-
-        Raises:
-            TypeError: If the `target` property of the TargetSegment object is itself not
-                hashable.
-            RecursionError: If the `target` is the TargetSegment object itself.
-        """
-        try:
-            h = hash((self.target, self.score))
-            return h
-        except TypeError:
-            return NotImplemented  # TargetSegments are hashable iff self.target is
-
     def __eq__(self, other) -> bool:
         """Compares itself to another Target Segment or 2-tuple.
 
@@ -127,16 +110,6 @@ class TargetSegment:
         if isinstance(other, (tuple, list)) and len(other) == 2:
             return tuple(other) == (self.target, self.score)
         return NotImplemented
-
-
-class TargetForm:
-    """Implementation of Target Forms.
-
-    A Target Form is an ordered sequence of segment-score pairs representing the base or
-    an alternant in a Target Schema.
-    """
-
-    pass
 
 
 class TargetSchema:

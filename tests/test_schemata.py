@@ -73,6 +73,7 @@ class TestTargetSegment(unittest.TestCase):
         self.assertIsInstance(out, str)
         self.assertEqual(out, "(foo, 42)")
 
+    @unittest.skip("We shouldn't hash mutable objects.")
     def test_hashes(self):
         """Tests that hash() values are equal to (target, score) tuples."""
         seg = TargetSegment("foo", 42)
@@ -83,6 +84,7 @@ class TestTargetSegment(unittest.TestCase):
         self.assertEqual(hash(seg), hash(((1, 2, 3), 43)))
         self.assertNotEqual(hash(seg), hash(("foo", 43)))
 
+    @unittest.skip("We shouldn't hash mutable objects.")
     def test_hashability(self):
         """Tests raising of exceptions when trying to hash with non-hashable targets."""
         seg = TargetSegment()
