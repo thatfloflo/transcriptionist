@@ -145,7 +145,7 @@ class TestTargetSchema(unittest.TestCase):
         self.assertEqual(s.n_alternants, 0)
         s = TargetSchema(10, 2)
         self.assertEqual(s.length, 10)
-        self.assertEqual(len(s), 10)
+        self.assertEqual(len(s), 10 * 2)
         self.assertEqual(s.n_forms, 2)
         self.assertEqual(s.n_alternants, 1)
 
@@ -153,30 +153,23 @@ class TestTargetSchema(unittest.TestCase):
         """Tests assigning and reading the base form of a Schema."""
         s = TargetSchema(5)
         base_seq = ["a", "b", "c", "d", "e"]
+        for i in range(0, len(base_seq)):
+            base_seq[i] = TargetSegment(base_seq[i])
         # From list
-        s.base = base_seq
-        self.assertEqual(s.base, base_seq)
+        s.setbase(base_seq)
+        self.assertEqual(s.getbase(), base_seq)
         # From tupel
-        s.base = tuple(base_seq)
-        self.assertEqual(s.base, base_seq)
+        s.setbase(tuple(base_seq))
+        self.assertEqual(s.getbase(), base_seq)
         # Invalid, too short
         with self.assertRaises(ValueError):
-            s.base = ["a", "b"]
+            s.setbase([TargetSegment("a"), TargetSegment("b")])
         # Invalid, too long
         with self.assertRaises(ValueError):
-            s.base = base_seq + ["f"]
+            s.setbase(base_seq + [TargetSegment("f")])
         # Invalid, not a sequence type
         with self.assertRaises(TypeError):
-            s.base = 2718
-
-    def test_set_and_read_alternants(self):
-        """Tests assigning and reading the alternants of a Schema."""
-        s = TargetSchema(2, 5)
-        self.assertEqual(s.alternants, [[None, None] for _ in range(0, 4)])
-        s.set_alternant(0, ["a", "b"])
-        self.assertEqual(s.alternants[0], ["a", "b"])
-        s.set_alternant(3, ["c", "d"])
-        self.assertEqual(s.alternants[3], ["c", "d"])
+            s.setbase(2718)
 
 
 if __name__ == "__main__":
