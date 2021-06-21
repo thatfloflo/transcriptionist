@@ -281,6 +281,39 @@ class TestMatrices(unittest.TestCase):
                 m.append_col(item)
 
 
+class TestMatrixIterator(unittest.TestCase):
+    """Unit tests for the `transcriptionist.matrices.MatrixIterator` class."""
+
+    def test_iteration_order(self):
+        """Tests that Matrix objects are iterated through in the correct order."""
+        m = Matrix(2, 2)
+        m.setrow(0, [0, 1])
+        m.setrow(1, [2, 3])
+        i = 0
+        for cell in m:
+            self.assertEqual(cell, i)
+            i += 1
+
+    def test_iteration_range(self):
+        """Tests that iter(Matrix) iterates exhaustively through all cells."""
+        m = Matrix(3, 5, default_value=1)
+        total = 0
+        for cell in m:
+            total += cell
+        self.assertEqual(total, 15)
+
+    def test_enumeration_pointers(self):
+        """Tests that the pointers in an enumeration point to the correct cells."""
+        m = Matrix(2, 2)
+        m.setrow(0, [0, 1])
+        m.setrow(1, [2, 3])
+        i = 0
+        for ptr, cell in m.enumerator():
+            self.assertEqual(m[ptr], cell)
+            self.assertEqual(cell, i)
+            i += 1
+
+
 class TestMatrixPointers(unittest.TestCase):
     """Unit tests for the `transcriptionist.matrices.MatrixPointer` class."""
 

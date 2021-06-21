@@ -727,6 +727,37 @@ class Matrix:
                 m[r, c] = function(self[r, c])
         return m
 
+    def __iter__(self) -> MatrixIterator:
+        """Returns an iterator for the Natrix object."""
+        return MatrixIterator(self)
+
+    def enumerator(self) -> MatrixIterator:
+        """Returns an enumerator for the Matrix object.
+
+        As opposed to iterating through the Matrix object itself, iterating through
+        Matrix.enumerate() returns not just the value of each cell, but rather a tuple
+        containing a pointer to the current cell and the value of the cell.
+
+        Example::
+
+            m = Matrix(2, 2, default_value=1, cell_width=2)
+            m.setrow(0, [1, 2])
+            m.setrow(1, [3, 4])
+            for ptr, val in m.enumerator():
+                m[ptr] = val**2
+            print(m)
+
+        Output::
+
+            [ 1 , 4  ]
+            [ 9 , 16 ]
+
+        Returns:
+            A MatrixIterator object where next() returns a tuple of the MatrixPointer and
+            the value of the current cell.
+        """
+        return MatrixIterator(self, enumeration=True)
+
 
 class MatrixPointer:
     """Pointers pointing at a specific cell in a `Matrix`.
@@ -1206,3 +1237,48 @@ class MatrixPointer:
 
         """
         return other.directionto(self)
+
+
+class MatrixIterator:
+    """Iterator for Matrix objects."""
+
+    matrix: Matrix
+    ptr: MatrixPointer
+    enumeration: bool
+    end: bool
+
+    def __init__(self, m: Matrix, enumeration: bool = False):
+        """Initialises a new MatrixIterator on the Matrix `m`.
+
+        The iterator walks through the matrix row by row, walking through each row column
+        by column (i.e. a 2x2 matrix is walked through as (0,0) -> (0,1) -> (1,0) ->
+        (1,1). Calling next() on a MatrixIterator normally returns the value of the cell,
+        unless the MatrixIterator was instantiated with `pointers=True`, in which case
+        it will return a tuple with a pointer to the current cell as the first element,
+        and its value as the second element.
+
+        Args:
+            m: A Matrix object.
+            enumeration: Whether to return pointers to each cell.
+        """
+        self.matrix = m
+        self.ptr = MatrixPointer(m)
+        self.enumeration = enumeration
+        self.end = False
+
+    def __iter__(self) -> MatrixIterator:
+        """Returns itself."""
+        return self
+
+    def __next__(self) -> Any:
+        """Returns the next item of the Matrix."""
+        if self.end:
+            raise StopIteration
+        value = self.matrix[self.ptr]
+        ptr = self.ptr.copy()
+        if not self.ptr.advance():
+            self.end = True
+        if self.enumeration:
+            return (ptr, value)
+        else:
+            return value
