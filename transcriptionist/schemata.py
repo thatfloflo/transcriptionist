@@ -116,6 +116,7 @@ class TargetSegment:
 class TargetSchema(Matrix):
     """Implementation of Target Schemas."""
 
+    @multimethod
     def __init__(self, length: int = 1, n_forms: int = 1):
         """Initialises a new Target Schema.
 
@@ -126,8 +127,8 @@ class TargetSchema(Matrix):
             raise ValueError("Length and forms must be integers greater than 0.")
         super().__init__(n_forms, length)
 
-    @classmethod
-    def from_matrix(cls, matrix: Matrix) -> TargetSchema:
+    @multimethod
+    def __init__(self, matrix: Matrix):  # noqa: F811
         """Instantiates a new TargetSchema from a matrix.
 
         Args:
@@ -145,10 +146,9 @@ class TargetSchema(Matrix):
             raise TypeError(
                 f"Supplied matrix must be an object of type Matrix, {type(matrix)} given."
             )
-        ts = cls(matrix.n_cols, matrix.n_cols)
+        super().__init__(matrix.n_rows, matrix.n_cols)
         for ptr, val in matrix.enumerator():
-            ts[ptr] = val
-        return ts
+            self[ptr] = val
 
     @property
     def length(self):

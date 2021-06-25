@@ -1,6 +1,7 @@
 """Unit tests for the `schemata` submodule of `transcriptionist`."""
 import unittest
 from transcriptionist.schemata import TargetSegment, TargetSchema
+from transcriptionist.matrices import Matrix
 
 
 class TestTargetSegment(unittest.TestCase):
@@ -148,6 +149,16 @@ class TestTargetSchema(unittest.TestCase):
         self.assertEqual(len(s), 10 * 2)
         self.assertEqual(s.n_forms, 2)
         self.assertEqual(s.n_alternants, 1)
+
+    def test_schema_creation_from_matrix(self):
+        """Tests initialisation of schemata by passing a matrix."""
+        m = Matrix(3, 3)
+        s1 = TargetSchema(3, 3)
+        for ptr, _ in m.enumerator():
+            m[ptr] = TargetSegment(f"{ptr.r}:{ptr.c}")
+            s1[ptr] = TargetSegment(f"{ptr.r}:{ptr.c}")
+        s2 = TargetSchema(m)
+        self.assertEqual(s1, s2)
 
     def test_set_and_read_base(self):
         """Tests assigning and reading the base form of a Schema."""
