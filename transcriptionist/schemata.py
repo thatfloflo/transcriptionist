@@ -6,9 +6,10 @@ is derived, each which has a score based on the compound of the schema's compone
 was derived from.
 """
 from __future__ import annotations
-from typing import Any, Union
+from typing import Any, Union, Sequence, Iterable
 from multimethod import multimethod
 from .matrices import Matrix, MatrixPointer
+from collections import UserList
 
 
 class TargetSegment:
@@ -181,6 +182,10 @@ class TargetSchema(Matrix):
         """Sets the form at the specified index to a list of TargetSegment objects."""
         self.setrow(index, form)
 
+    def getalternants(self) -> list:
+        """Returns a list containing the alternant forms of the TargetScheme."""
+        return self.rows[1:]
+
     @multimethod
     def setitem(self, row: int, col: int, value: Union[TargetSegment, None]) -> None:
         """Sets the TargetSegment at the coordinates `row` and `col` to `value`.
@@ -285,3 +290,149 @@ class TargetSchema(Matrix):
             raise ValueError(
                 "Supplied value list must have equal length as TargetScheme."
             ) from exc
+
+    def __compile(  # noqa: C901
+        self, base: list, alts: list, debug: bool = False, debug_indent: int = 0
+    ):
+        """Internal method to recursively compile the scheme."""
+        comp = set()
+        if debug:
+            print(" " * debug_indent, f"Base: {base}")
+        comp.add(TargetSequence(base))
+        for i in range(0, len(alts)):
+            if debug:
+                print(" " * debug_indent, f"Alt: {alts[i]}")
+            form = [TargetSegment() for _ in range(0, len(base))]
+            for j in range(0, len(base)):
+                if alts[i][j].target is not None:
+                    form[j].target = alts[i][j].target
+                    form[j].score = alts[i][j].score
+                elif base[j].target is not None:
+                    form[j].target = base[j].target
+                    form[j].score = base[j].score
+            if debug:
+                print(" " * debug_indent, f"  --> {form}.")
+            comp.add(TargetSequence(form))
+            new_alts = alts.copy()
+            new_alts.pop(i)
+            if len(new_alts) > 0:
+                subcomp = self.__compile(
+                    base=form, alts=new_alts, debug=debug, debug_indent=debug_indent + 2
+                )
+            comp.update(subcomp)
+        return comp
+
+    def compile(self, debug: bool = False) -> TargetCompilation:  # noqa: A003
+        """Compiles the TargetSchema to a TargetCompilation of scored TargetSequences."""
+        return self.__compile(self.getbase(), self.getalternants(), debug=debug)
+
+
+class TargetSequence:
+    """Implments TargetSequence objects, which consist of a sequence and a score."""
+
+    __sequence: tuple
+    __flat: Union[str, None]
+    __score: Union[int, float]
+
+    @multimethod
+    def __init__(self, sequence: Sequence, score: Union[int, float]):
+        """Initialises a new TargetSequence."""
+        self.__sequence = tuple(sequence)
+        self.__score = score
+        self.__flat = self.flatten()
+
+    @multimethod
+    def __init__(self, sequence: Sequence[TargetSegment]):  # noqa: F811
+        """Initialises a new TargetSequence from a list of TargetSegments."""
+        clean = []
+        score = 0
+        for item in sequence:
+            if not isinstance(item, TargetSegment):
+                raise TypeError("Sequence must consist of TargetSegment objects.")
+            clean.append[item.target]
+            score += item.score
+        self.__init__(clean, score)
+
+    @property
+    def sequence(self):
+        """The ordered sequence of target items."""
+        return self.__sequence
+
+    @property
+    def flat(self):
+        """The target sequence flattened into a string; None if containing non-strings."""
+        return self.__flat
+
+    @property
+    def score(self):
+        """The score of the target sequence."""
+
+    def flatten(self):
+        """Attempts to concatenate the individual segments if they are all strings."""
+        try:
+            return "".join(self.sequence)
+        except TypeError:
+            return None
+
+    def __hash__(self):
+        """Returns a hash based on the sequence and score."""
+        return hash((self.sequence, self.score))
+
+    def __eq__(self, other):
+        """Compares itself to another TargetSequence."""
+        if isinstance(other, type(self)):
+            return (self.sequence, self.score) == (other.sequence, other.score)
+        return NotImplemented
+
+    def __str__(self):
+        """Returns a string representation of the TargetSegment."""
+        if self.flat is not None:
+            return f"('{self.flat}', {self.score})"
+        return f"({self.sequence!r}, {self.score})"
+
+    def __repr__(self):
+        """Returns a parseable representation of the TargetSegment."""
+        return f"TargetSegment({self.sequence!r}, {self.score!r})"
+
+    def __iter__(self):
+        """Returns its own sequence for iteration."""
+        return iter(self.sequence)
+
+
+class TargetCompilation(UserList):
+    """A collection of TargetSequence objects generated from a TargetSchema."""
+
+    def __init__(self, data: Iterable[TargetSequence] = None):
+        """Initialises a new TargetCompilation."""
+        super().__init__()
+        if isinstance(data, Iterable):
+            for x in data:
+                self.append(x)
+
+    def validate_item(self, x: Any) -> None:
+        """Raises TypeError if `item` is not a TargetSequence."""
+        if not isinstance(x, TargetSequence):
+            raise TypeError(
+                "A TargetCompilation may only contain items of type TargetSequence."
+            )
+
+    def append(self, x: TargetSequence) -> None:
+        """Add an item to the end of the compilation."""
+        self.validate_item(x)
+        return self.data.append(x)
+
+    def __setitem__(self, i: Union[int, slice], x: TargetSequence) -> None:
+        """Sets value of item at index `i`."""
+        self.validate_item(x)
+        self.data[i] = x
+
+    def extend(self, iterable: Iterable) -> None:
+        """Extend the TargetSequence with items from the iterable."""
+        for item in iterable:
+            self.validate_item(item)
+        return self.data.extend(iterable)
+
+    def insert(self, i: int, x: Any) -> None:
+        """Insert an item at a given position."""
+        self.validate_item(x)
+        return self.data.insert(i, x)
