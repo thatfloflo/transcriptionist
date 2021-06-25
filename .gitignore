@@ -21,3 +21,9 @@ bak
 
 # Pylint reports
 pylint-report.txt
+
+# Additional local files
+*.local.*
+
+# Don't include docs for now (remove later)
+/docs/
