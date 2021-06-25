@@ -251,6 +251,33 @@ class TestMatrices(unittest.TestCase):
             ):
                 m.append_row(item)
 
+    def test_equality_of_matrices(self):
+        """Tests that two matrices do/don't compare equal by cell values."""
+        m1 = Matrix([[1, 2, 3], [4, 5, 6]])
+        m2 = m1.copy()
+        m2.default_value = 8
+        m2.row_labels = [0, 1]
+        m2.col_labels = [0, 1, 2]
+        m2.cell_width = 2
+        m3 = m1.copy()
+        m3[1, 0] = 0
+        self.assertEqual(m1, m1)
+        self.assertEqual(m1, m2)
+        self.assertNotEqual(m1, m3)
+        self.assertNotEqual(m2, m3)
+
+    def test_equality_with_lists(self):
+        """Tests that matrices do/don't compare equal with sequences of sequences."""
+        m = Matrix([[1, 2, 3], [4, 5, 6]])
+        lst = [[1, 2, 3], [4, 5, 6]]
+        tpl = ((1, 2, 3), (4, 5, 6))
+        self.assertEqual(m, lst)
+        self.assertEqual(m, tpl)
+        lst[0][1] = 0
+        tpl = ((1, 0, 3), (4, 5, 6))
+        self.assertNotEqual(m, lst)
+        self.assertNotEqual(m, tpl)
+
     def test_insert_column_value_validity(self):  # noqa: C901
         """Tests that `insert_row()` accepts only valid value sequences as argument."""
         m = Matrix(3, 3)

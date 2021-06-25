@@ -748,6 +748,38 @@ class Matrix:
             buf += f", cell_width={self.cell_width!r}"
         return buf + ")"
 
+    def __eq__(self, other: Any) -> bool:  # noqa: C901
+        """Compares itself to another Matrix or sequence of sequences.
+
+        Compares two matrixes (or a matrix and a sequence of sequence of identical
+        dimensions) cell by cell, and returns True if all the cells are equal.
+
+        Note:
+            The comparison ignores everything except the actual cell values. Therefore,
+            two matrices will compare equal if their cells have the same content even
+            if, for example, their default value or labels are different.
+
+        Args:
+            other: Another Segment, or a tuple or list of length 2.
+
+        Returns:
+            True if all the cell values between the two objects compare equal,
+            False otherwise.
+        """
+        if isinstance(other, type(self)) and self.n_dim == other.n_dim:
+            for ptr, _ in self.enumerator():
+                if self[ptr] != other[ptr]:
+                    return False
+            return True
+
+        if isinstance(other, Sequence) and len(other) == self.n_rows:
+            for r in range(0, self.n_rows):
+                if self.rows[r] != list(other[r]):
+                    return False
+                return True
+
+        return NotImplemented
+
     def mutate(self, function: callable) -> None:
         """Applies 'function' to every cell in the matrix (in situ mapping).
 
