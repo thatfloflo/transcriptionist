@@ -1,7 +1,6 @@
 """Unit tests for the `matrices` submodule of the `transcriptionist` package."""
 import unittest
 import random
-from ast import literal_eval
 from transcriptionist.matrices import Matrix, MatrixPointer
 
 
@@ -124,9 +123,9 @@ class TestMatrices(unittest.TestCase):
         m[2, 1] = value
         n = []
         out = repr(m)
-        n = literal_eval(out)
-        self.assertEqual(m[2, 1], n[2][1])
-        self.assertEqual(n[2][1], value)
+        n = eval(out)  # noqa: S307
+        self.assertEqual(m[2, 1], n[2, 1])
+        self.assertEqual(n[2, 1], value)
 
     def test_listification(self):
         """Ensures that list and row access properties are consistently of type `list`."""

@@ -37,6 +37,7 @@ class Matrix:
     __col_labels: Optional[Sequence]
     __cell_width: Optional[int]
 
+    @multimethod
     def __init__(
         self,
         rows: int,
@@ -82,6 +83,46 @@ class Matrix:
         self.row_labels = row_labels
         self.col_labels = col_labels
         self.cell_width = cell_width
+
+    @multimethod
+    def __init__(  # noqa: F811
+        self,
+        data: Sequence,
+        default_value: Any = None,
+        row_labels: Optional[Sequence] = None,
+        col_labels: Optional[Sequence] = None,
+        cell_width: Optional[int] = 0,
+    ):
+        """Creates a new matrix from a sequence.
+
+        Creates a new matrix from a sequence of sequences (e.g. a list of lists), where
+        the outer sequence represents rows and the inner sequence represents columns,
+        the same format as is accessible via `Matrix.rows`. The row and column labels and
+        specified cell width are only used when the matrix is converted to a string,
+        e.g. for printing. The specified `default_value` will be used only if further rows
+        or columns are added later.
+
+        Args:
+            data: A sequence of sequences, representing columns inside rows of data.
+            default_value: The default value with which new cells should be initialised.
+            row_labels: An optional sequence of length `rows` to be used as row labels.
+            col_labels: An optional sequence of length `cols` to be used as column labels.
+            cell_width: The cell width to be used for alignment when the matrix is
+                represented as a string.
+
+        Raises:
+            TypeError: Raised if `data` is not a sequence containing a sequence.
+        """
+        if not isinstance(data, Sequence) or not isinstance(data[0], Sequence):
+            raise TypeError("Argument `data` must be a sequence of sequences.")
+
+        rows = len(data)
+        cols = len(data[0])
+
+        self.__init__(rows, cols, default_value, row_labels, col_labels, cell_width)
+
+        for r in range(0, rows):
+            self.setrow(r, data[r])
 
     def copy(self) -> Matrix:
         """Makes a shallow copy of itself.
@@ -684,19 +725,28 @@ class Matrix:
             cell_width=self.cell_width,
         )
 
-    def __repr__(self) -> str:
-        """Returns a parseable representation of the matrix as a list of lists."""
-        buf = "["
+    def __repr__(self) -> str:  # noqa: C901
+        """Returns a parseable representation of the matrix."""
+        buf = "Matrix(["
         for r in range(0, self.n_rows):
             if r > 0:
-                buf += "],\n ["
+                buf += "], ["
             else:
                 buf += "["
             for c in range(0, self.n_cols):
                 if c > 0:
                     buf += ", "
-                buf += repr(self[r, c]).ljust(self.cell_width)
-        return buf + "]]"
+                buf += repr(self[r, c])
+        buf += "]]"
+        if self.default_value is not None:
+            buf += f", default_value={self.default_value!r}"
+        if self.row_labels is not None:
+            buf += f", row_labels={self.row_labels!r}"
+        if self.col_labels is not None:
+            buf += f", col_labels={self.col_labels!r}"
+        if self.cell_width != 0:
+            buf += f", cell_width={self.cell_width!r}"
+        return buf + ")"
 
     def mutate(self, function: callable) -> None:
         """Applies 'function' to every cell in the matrix (in situ mapping).
