@@ -12,6 +12,9 @@ __pycache__/*
 # Tox environment
 .tox/*
 
+# Pytest
+.pytest_cache/*
+
 # Python egg metadata, generated from source files by setuptools
 /*.egg-info
 
@@ -26,4 +29,4 @@ pylint-report.txt
 *.local.*
 
 # Don't include docs for now (remove later)
-/docs/
+docs/*
