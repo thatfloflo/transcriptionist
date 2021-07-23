@@ -182,6 +182,64 @@ class TestTargetSchema(unittest.TestCase):
         with self.assertRaises(TypeError):
             s.setbase(2718)
 
+    def test_schema_compilation(self):
+        """Tests the compilation of a TargetSchema to a TargetCompilation."""
+        s = TargetSchema(4, 8)
+        s[0, 0] = TargetSegment("ʍ", 1.0)
+        s[0, 1] = TargetSegment("a", 1.0)
+        s[0, 2] = TargetSegment("ʐ", 1.0)
+        s[0, 3] = TargetSegment("a", 1.0)
+        s[1, 0] = TargetSegment("xʷ", 1.0)
+        s[2, 0] = TargetSegment("xw", 1.0)
+        s[3, 1] = TargetSegment("ɐ", 1.0)
+        s[3, 3] = TargetSegment("ɐ", 1.0)
+        s[4, 0] = TargetSegment("w", 0.5)
+        s[5, 0] = TargetSegment("x", 0.5)
+        s[6, 2] = TargetSegment("ʒ", 0.5)
+        s[7, 2] = TargetSegment("ʂ", 0.5)
+        c = s.compile(debug=False)
+        expected = (
+            ("waʂa", 3.0),
+            ("xwɐʂɐ", 3.5),
+            ("xwɐʒɐ", 3.5),
+            ("xʷɐʐɐ", 4.0),
+            ("wɐʐɐ", 3.5),
+            ("xwaʐa", 4.0),
+            ("xwaʒa", 3.5),
+            ("xaʂa", 3.0),
+            ("xwaʂa", 3.5),
+            ("xʷɐʒɐ", 3.5),
+            ("wɐʒɐ", 3.0),
+            ("waʐa", 3.5),
+            ("xɐʂɐ", 3.0),
+            ("ʍaʒa", 3.5),
+            ("ʍɐʒɐ", 3.5),
+            ("xʷaʂa", 3.5),
+            ("ʍɐʂɐ", 3.5),
+            ("xʷaʒa", 3.5),
+            ("ʍaʐa", 4.0),
+            ("xʷɐʂɐ", 3.5),
+            ("xaʒa", 3.0),
+            ("xwɐʐɐ", 4.0),
+            ("xɐʒɐ", 3.0),
+            ("wɐʂɐ", 3.0),
+            ("ʍɐʐɐ", 4.0),
+            ("ʍaʂa", 3.5),
+            ("xaʐa", 3.5),
+            ("xɐʐɐ", 3.5),
+            ("waʒa", 3.0),
+            ("xʷaʐa", 4.0),
+        )
+        self.assertEqual(len(c), len(expected))
+        for expected_item in expected:
+            self.assertIn(expected_item[0], c)
+        print("\n" + "-" * 80)
+        print("TargetSchema:\n")
+        print(s.stringify(cell_width=9))
+        print("Compilation:\n", c)
+        print("Expected:\n", expected)
+        print("-" * 80)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

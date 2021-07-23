@@ -26,13 +26,10 @@ class TestLevenshtein(unittest.TestCase):
         for (str1, str2), dist in unweighted.items():
             ld = Levenshtein(str1, str2)
             ld.compute()
-            print(f"Comparing: '{str1}', '{str2}':")
-            print(f"Edit distance: {dist}")
-            # print(list(map(EditOperation.code, ld.esequence)))
-            # print(ld.dirmatrix.map(Direction.symbol))
-            # print(list(map(Direction.symbol, ld.dirsequence)))
-            print(ld.visualise())
-            print("-" * 80)
+            # print(f"Comparing: '{str1}', '{str2}':")
+            # print(f"Edit distance: {dist}")
+            # print(ld.visualise())
+            # print("-" * 80)
             self.assertEqual(
                 ld.distance,
                 dist,

@@ -126,7 +126,7 @@ class TargetSchema(Matrix):
         """
         if length < 1 or n_forms < 1:
             raise ValueError("Length and forms must be integers greater than 0.")
-        super().__init__(n_forms, length)
+        super().__init__(n_forms, length, default_value=TargetSegment())
 
     @multimethod
     def __init__(self, matrix: Matrix):  # noqa: F811
@@ -298,7 +298,7 @@ class TargetSchema(Matrix):
         comp = set()
         if debug:
             print(" " * debug_indent, f"Base: {base}")
-        comp.add(TargetSequence(base))
+        comp.add(TargetSequence.from_segments(base))
         for i in range(0, len(alts)):
             if debug:
                 print(" " * debug_indent, f"Alt: {alts[i]}")
@@ -312,19 +312,21 @@ class TargetSchema(Matrix):
                     form[j].score = base[j].score
             if debug:
                 print(" " * debug_indent, f"  --> {form}.")
-            comp.add(TargetSequence(form))
+            comp.add(TargetSequence.from_segments(form))
             new_alts = alts.copy()
             new_alts.pop(i)
             if len(new_alts) > 0:
                 subcomp = self.__compile(
                     base=form, alts=new_alts, debug=debug, debug_indent=debug_indent + 2
                 )
-            comp.update(subcomp)
+                comp.update(subcomp)
         return comp
 
     def compile(self, debug: bool = False) -> TargetCompilation:  # noqa: A003
         """Compiles the TargetSchema to a TargetCompilation of scored TargetSequences."""
-        return self.__compile(self.getbase(), self.getalternants(), debug=debug)
+        return TargetCompilation(
+            self.__compile(self.getbase(), self.getalternants(), debug=debug)
+        )
 
 
 class TargetSequence:
@@ -334,24 +336,23 @@ class TargetSequence:
     __flat: Union[str, None]
     __score: Union[int, float]
 
-    @multimethod
     def __init__(self, sequence: Sequence, score: Union[int, float]):
         """Initialises a new TargetSequence."""
         self.__sequence = tuple(sequence)
         self.__score = score
         self.__flat = self.flatten()
 
-    @multimethod
-    def __init__(self, sequence: Sequence[TargetSegment]):  # noqa: F811
+    @classmethod
+    def from_segments(cls, sequence: Sequence[TargetSegment]):
         """Initialises a new TargetSequence from a list of TargetSegments."""
         clean = []
         score = 0
         for item in sequence:
             if not isinstance(item, TargetSegment):
                 raise TypeError("Sequence must consist of TargetSegment objects.")
-            clean.append[item.target]
+            clean.append(item.target)
             score += item.score
-        self.__init__(clean, score)
+        return cls(clean, score)
 
     @property
     def sequence(self):
@@ -366,6 +367,7 @@ class TargetSequence:
     @property
     def score(self):
         """The score of the target sequence."""
+        return self.__score
 
     def flatten(self):
         """Attempts to concatenate the individual segments if they are all strings."""
@@ -392,7 +394,7 @@ class TargetSequence:
 
     def __repr__(self):
         """Returns a parseable representation of the TargetSegment."""
-        return f"TargetSegment({self.sequence!r}, {self.score!r})"
+        return f"{type(self).__name__}({self.sequence!r}, {self.score!r})"
 
     def __iter__(self):
         """Returns its own sequence for iteration."""
@@ -421,6 +423,39 @@ class TargetCompilation(UserList):
         self.validate_item(x)
         return self.data.append(x)
 
+    def find(self, x: Union[str, Sequence, TargetSequence]):
+        """Finds and returns the first instance of x, or ValueError."""
+        return self.data[self.locate(x)]
+
+    def locate(self, x: Union[str, Sequence, TargetSequence]):  # noqa: C901
+        """Locates the first instance of x and returns its index, or ValueError."""
+        for i in range(0, len(self.data)):
+            if isinstance(x, TargetSequence):
+                if self.data[i] == x:
+                    return i
+            elif isinstance(x, str):
+                if self.data[i].flat == x:
+                    return i
+            elif isinstance(x, Sequence):
+                if self.data[i].sequence == tuple(x):
+                    return i
+        raise ValueError(f"Item '{x}' was not found in the TargetCompilation.")
+
+    def count(self, x: Union[str, Sequence, TargetSequence]):  # noqa: C901
+        """Counts the number of times an item occurs in the TargetCompilation."""
+        count = 0
+        for sequence in self.data:
+            if isinstance(x, TargetSequence):
+                if sequence == x:
+                    count += 1
+            elif isinstance(x, str):
+                if sequence.flat == x:
+                    count += 1
+            elif isinstance(x, Sequence):
+                if sequence.sequence == tuple(x):
+                    count += 1
+        return count
+
     def __setitem__(self, i: Union[int, slice], x: TargetSequence) -> None:
         """Sets value of item at index `i`."""
         self.validate_item(x)
@@ -436,3 +471,29 @@ class TargetCompilation(UserList):
         """Insert an item at a given position."""
         self.validate_item(x)
         return self.data.insert(i, x)
+
+    def __contains__(self, item: Any):  # noqa: C901
+        """Checks whether the TargetCompilation contains an item."""
+        if isinstance(item, TargetSequence):
+            return item in self.data
+        elif isinstance(item, str):
+            for sequence in self.data:
+                if sequence.flat == item:
+                    return True
+            return False
+        elif isinstance(item, Sequence):
+            for sequence in self.data:
+                if sequence.sequence == tuple(item):
+                    return True
+            return False
+        return NotImplemented
+
+    def __str__(self):
+        """Return a string representation of the TargetCompilation."""
+        buf = ""
+        last = len(self.data) - 1
+        for i in range(0, len(self.data)):
+            buf += f"{i}: {self.data[i]}"
+            if i < last:
+                buf += ",\n"
+        return buf

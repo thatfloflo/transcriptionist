@@ -699,10 +699,13 @@ class Matrix:
                 if row_labels is not None:
                     buf += "".ljust(cell_width) + " "  # Empty cell
                 buf += "  "  # Cover distance of "[ "
-                for label in col_labels:
-                    buf += str(label).ljust(cell_width)
-                    buf += "  "  # Add space in lieu for ", "
-            buf += "\n" if r == 0 else "]\n"
+                if col_labels is not None:
+                    for label in col_labels:
+                        buf += str(label).ljust(cell_width)
+                        buf += "  "  # Add space in lieu for ", "
+                    buf += "\n"
+            if r != 0:
+                buf += "]\n"
             for c in range(0, self.n_cols):
                 if c == 0:
                     if row_labels is not None:
@@ -714,7 +717,7 @@ class Matrix:
                     buf += "[ "
                 buf += ", " if c > 0 else ""
                 buf += str(self[r, c]).ljust(cell_width)
-        buf += " ]"
+        buf += "]"
         return buf
 
     def __str__(self) -> str:
