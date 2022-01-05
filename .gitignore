@@ -28,5 +28,8 @@ pylint-report.txt
 # Additional local files
 *.local.*
 
+# VSCode configuration
+/.vscode/
+
 # Don't include docs for now (remove later)
 docs/*
