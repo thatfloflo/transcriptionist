@@ -10,10 +10,10 @@ __pycache__/*
 /dist/
 
 # Tox environment
-.tox/*
+/.tox/
 
 # Pytest
-.pytest_cache/*
+/.pytest_cache/
 
 # Python egg metadata, generated from source files by setuptools
 /*.egg-info
